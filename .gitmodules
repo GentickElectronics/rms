@@ -1,0 +1,6 @@
+[submodule "rms-app"]
+	path = rms-app
+	url = https://github.com/GentickElectronics/rms-app.git
+[submodule "rms-infra"]
+	path = rms-infra
+	url = https://github.com/GentickElectronics/rms-infra.git
