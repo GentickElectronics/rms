@@ -4,3 +4,9 @@
 [submodule "rms-infra"]
 	path = rms-infra
 	url = https://github.com/GentickElectronics/rms-infra.git
+[submodule "rms-api"]
+	path = rms-api
+	url = https://github.com/GentickElectronics/rms-api.git
+[submodule "rms-frontend"]
+	path = rms-frontend
+	url = https://github.com/GentickElectronics/rms-frontend.git
