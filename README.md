@@ -1,6 +1,6 @@
 # rms
 
-Parent repo for the Gentick Electronics Repair Management System.
+Umbrella repo for the Gentick Electronics Repair Management System — app and infra submodules plus product and design docs
 
 ## Structure
 
