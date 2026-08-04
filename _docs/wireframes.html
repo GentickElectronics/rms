@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gentick RMS — Wireframe Prototype v1.1</title>
+<style>
+:root {
+  /* Gentick brand */
+  --brand-green:       #72C044;
+  --brand-green-dark:  #5A9C35;
+  --brand-green-deep:  #3F7A22;
+  --brand-green-tint:  #E7F4DA;
+  --brand-green-50:    #F4F9EE;
+  --brand-grey:        #413F42;   /* primary dark — text, sidebar */
+  --brand-grey-dark:   #2A282B;
+  --brand-grey-mid:    #6B696D;
+  --white:             #FFFFFF;
+
+  /* Functional palette derived from brand */
+  --grey-25:   #FAFBFA;
+  --grey-50:   #F5F6F4;
+  --grey-100:  #ECEDEA;
+  --grey-200:  #D8DAD7;
+  --grey-300:  #B3B5B0;
+  --grey-400:  #828482;
+  --grey-500:  #5A595B;
+  --grey-700:  #413F42;
+  --grey-900:  #1A181B;
+
+  --amber-50:  #FFF6E5;
+  --amber-300: #FAC76A;
+  --amber-500: #E58E00;
+  --amber-700: #A66600;
+  --red-50:    #FEEEEC;
+  --red-500:   #D7382B;
+  --blue-50:   #EBF3FB;
+  --blue-500:  #2563A6;
+
+  --shadow-sm: 0 1px 2px rgba(65,63,66,0.06), 0 1px 3px rgba(65,63,66,0.08);
+  --shadow-md: 0 4px 12px rgba(65,63,66,0.08), 0 2px 4px rgba(65,63,66,0.05);
+  --radius:    8px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px; line-height: 1.5;
+  color: var(--brand-grey); background: var(--grey-50);
+}
+button { font-family: inherit; font-size: inherit; cursor: pointer; }
+a { color: var(--brand-green-deep); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3, h4 { margin: 0; color: var(--brand-grey); font-weight: 600; }
+h1 { font-size: 22px; }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--grey-500); }
+
+/* ===== Layout ===== */
+.app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+.sidebar {
+  background: var(--brand-grey);
+  color: var(--grey-100);
+  padding: 0;
+  position: sticky; top: 0;
+  height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.brand {
+  padding: 20px 18px 22px;
+  background: var(--white);
+  border-bottom: 1px solid var(--grey-100);
+}
+.brand-logo svg { width: 100%; max-width: 196px; height: auto; display: block; }
+
+.nav-section { padding: 16px 12px 6px; }
+.nav-section h4 {
+  color: var(--brand-green);
+  font-size: 11px; letter-spacing: 1.2px; padding: 0 8px 6px;
+  font-weight: 700;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin-bottom: 2px;
+  border-radius: 6px; color: var(--grey-100);
+  font-size: 13.5px; cursor: pointer;
+  border: 0; background: transparent; width: 100%; text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+.nav-item.active { background: var(--brand-green); color: var(--brand-grey-dark); font-weight: 600; }
+.nav-icon { width: 16px; text-align: center; font-size: 14px; }
+
+.role-switcher {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: var(--brand-grey-dark);
+}
+.role-switcher h4 { color: var(--brand-green); padding: 4px 8px; font-weight: 700; }
+.role-btn {
+  width: 100%;
+  padding: 8px 10px; margin-bottom: 4px;
+  border-radius: 5px; background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--grey-100); font-size: 12.5px;
+  text-align: left;
+}
+.role-btn:hover { background: rgba(255,255,255,0.06); }
+.role-btn.active { background: var(--brand-green); color: var(--brand-grey-dark); border-color: var(--brand-green); font-weight: 600; }
+
+.main { padding: 0; min-height: 100vh; }
+.topbar {
+  background: var(--white); border-bottom: 1px solid var(--grey-100);
+  padding: 16px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-title { display: flex; flex-direction: column; gap: 2px; }
+.crumb { font-size: 12px; color: var(--grey-400); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px; background: var(--grey-50);
+  font-size: 13px; color: var(--brand-grey);
+}
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand-green); color: var(--brand-grey-dark);
+  display: grid; place-items: center; font-weight: 700; font-size: 11px;
+}
+
+.page { padding: 24px 28px; max-width: 1320px; }
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.page-sub { color: var(--grey-500); font-size: 13px; margin-top: 4px; }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 6px; border: 1px solid transparent;
+  font-size: 13px; font-weight: 600;
+  transition: background 0.1s, transform 0.05s;
+}
+.btn-primary { background: var(--brand-green); color: var(--brand-grey-dark); }
+.btn-primary:hover { background: var(--brand-green-dark); color: var(--white); }
+.btn-secondary { background: var(--white); color: var(--brand-grey); border-color: var(--grey-200); font-weight: 500; }
+.btn-secondary:hover { background: var(--grey-50); }
+.btn-amber { background: var(--amber-500); color: var(--white); }
+.btn-amber:hover { background: var(--amber-700); }
+.btn-ghost { background: transparent; color: var(--grey-500); font-weight: 500; }
+.btn-ghost:hover { color: var(--brand-grey); }
+.btn-danger { background: var(--red-500); color: var(--white); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--white); border-radius: var(--radius);
+  border: 1px solid var(--grey-100);
+  box-shadow: var(--shadow-sm);
+}
+.card-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--grey-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-body { padding: 18px; }
+.card-pad { padding: 18px; }
+
+/* ===== KPI tiles ===== */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  margin-bottom: 22px;
+}
+.kpi {
+  background: var(--white); padding: 16px; border-radius: var(--radius);
+  border: 1px solid var(--grey-100); box-shadow: var(--shadow-sm);
+  position: relative; overflow: hidden;
+}
+.kpi-label { font-size: 12px; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+.kpi-value { font-size: 28px; font-weight: 700; margin: 6px 0 0; color: var(--brand-grey); }
+.kpi-meta { font-size: 12px; color: var(--grey-500); margin-top: 4px; }
+.kpi-meta .up { color: var(--brand-green-deep); font-weight: 600; }
+.kpi-meta .down { color: var(--red-500); font-weight: 600; }
+.kpi-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--brand-green);
+}
+.kpi.amber .kpi-bar { background: var(--amber-500); }
+.kpi.blue .kpi-bar  { background: var(--blue-500); }
+.kpi.red .kpi-bar   { background: var(--red-500); }
+.kpi.grey .kpi-bar  { background: var(--brand-grey); }
+
+/* ===== Stages strip ===== */
+.stages-strip {
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
+  margin-bottom: 22px;
+}
+.stage-cell {
+  background: var(--white); border: 1px solid var(--grey-100);
+  border-radius: var(--radius); padding: 12px;
+  position: relative;
+}
+.stage-cell .stage-name {
+  font-size: 11.5px; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.5px;
+}
+.stage-cell .stage-count {
+  font-size: 22px; font-weight: 700; margin-top: 4px;
+}
+.stage-cell.hot { border-color: var(--amber-300); background: var(--amber-50); }
+.stage-cell.hot .stage-count { color: var(--amber-700); }
+.stage-cell.cool { border-color: var(--brand-green); background: var(--brand-green-tint); }
+.stage-cell.cool .stage-count { color: var(--brand-green-deep); }
+
+/* ===== Tables ===== */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td {
+  text-align: left; padding: 11px 12px;
+  border-bottom: 1px solid var(--grey-100);
+  font-size: 13px;
+}
+.table th {
+  background: var(--grey-25); font-weight: 600; color: var(--grey-500);
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.table tr:hover td { background: var(--brand-green-50); cursor: pointer; }
+.table .job-num { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--brand-green-deep); font-weight: 700; }
+.table .right { text-align: right; }
+.table .num { font-variant-numeric: tabular-nums; }
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; line-height: 1.6;
+  background: var(--grey-100); color: var(--grey-700);
+}
+.badge.green { background: var(--brand-green-tint); color: var(--brand-green-deep); }
+.badge.amber { background: var(--amber-50); color: var(--amber-700); }
+.badge.red { background: var(--red-50); color: var(--red-500); }
+.badge.blue { background: var(--blue-50); color: var(--blue-500); }
+.badge.grey { background: var(--grey-100); color: var(--brand-grey); }
+.badge.dot::before { content: '●'; margin-right: 4px; font-size: 9px; }
+
+/* ===== Forms ===== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+.form-grid.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.span-2 { grid-column: span 2; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--brand-grey); }
+.field .hint { font-size: 11.5px; color: var(--grey-500); }
+.field input, .field select, .field textarea {
+  padding: 9px 11px; border: 1px solid var(--grey-200); border-radius: 6px;
+  font-size: 13.5px; background: var(--white); color: var(--brand-grey);
+  font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 0; border-color: var(--brand-green); box-shadow: 0 0 0 3px var(--brand-green-tint);
+}
+.field textarea { resize: vertical; min-height: 80px; }
+.checkbox-row {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 10px; background: var(--brand-green-50); border: 1px solid var(--brand-green-tint);
+  border-radius: 6px; margin-top: 6px;
+}
+.checkbox-row input { margin-top: 3px; }
+.checkbox-row label { font-size: 12.5px; color: var(--brand-grey); }
+
+/* ===== Job detail layout ===== */
+.detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.detail-meta {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  margin-bottom: 16px;
+}
+.meta-item .meta-label { font-size: 11.5px; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.meta-item .meta-value { font-size: 14px; font-weight: 500; margin-top: 3px; color: var(--brand-grey); }
+
+.stage-timeline { display: flex; gap: 4px; margin-bottom: 22px; flex-wrap: wrap; }
+.stage-pip {
+  flex: 1; min-width: 80px;
+  padding: 7px 6px; text-align: center;
+  background: var(--grey-100); color: var(--grey-500);
+  font-size: 11px; font-weight: 600;
+  border-radius: 4px;
+}
+.stage-pip.done   { background: var(--brand-green); color: var(--brand-grey-dark); }
+.stage-pip.now    { background: var(--amber-500); color: var(--white); box-shadow: 0 0 0 3px var(--amber-50); }
+.stage-pip.future { background: var(--grey-100); color: var(--grey-400); }
+
+.tab-strip { display: flex; gap: 0; border-bottom: 1px solid var(--grey-100); margin-bottom: 16px; }
+.tab {
+  padding: 10px 16px; background: transparent; border: 0;
+  font-size: 13px; color: var(--grey-500); font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--brand-green-deep); border-bottom-color: var(--brand-green); }
+
+.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.photo-tile {
+  aspect-ratio: 1.2; background: linear-gradient(135deg, var(--grey-100), var(--grey-200));
+  border-radius: 6px; display: grid; place-items: center;
+  color: var(--grey-400); font-size: 11px; text-align: center;
+  border: 1px dashed var(--grey-300); padding: 4px;
+}
+
+/* ===== Timeline ===== */
+.tl { padding: 0; margin: 0; list-style: none; }
+.tl li {
+  position: relative; padding: 0 0 16px 26px;
+  border-left: 2px solid var(--grey-100); margin-left: 7px;
+}
+.tl li:last-child { border-left: 0; padding-bottom: 0; }
+.tl .tl-dot {
+  position: absolute; left: -8px; top: 2px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--brand-green); border: 2px solid var(--white);
+  box-shadow: 0 0 0 1px var(--brand-green);
+}
+.tl li.muted .tl-dot { background: var(--grey-300); box-shadow: 0 0 0 1px var(--grey-200); }
+.tl-time { font-size: 11.5px; color: var(--grey-400); }
+.tl-title { font-size: 13px; font-weight: 600; color: var(--brand-grey); }
+.tl-body { font-size: 12.5px; color: var(--grey-500); margin-top: 2px; }
+
+/* ===== Messages ===== */
+.msg-list { display: flex; flex-direction: column; gap: 10px; }
+.msg {
+  padding: 9px 12px; border-radius: 8px; max-width: 78%;
+  font-size: 13px; line-height: 1.45;
+}
+.msg.out { background: var(--brand-green-tint); color: var(--brand-grey); align-self: flex-end; border-bottom-right-radius: 2px; }
+.msg.in  { background: var(--grey-100); color: var(--brand-grey); align-self: flex-start; border-bottom-left-radius: 2px; }
+.msg-meta { font-size: 11px; color: var(--grey-400); margin-top: 3px; }
+.msg.out .msg-meta { text-align: right; }
+
+/* ===== Main customer portal ===== */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  margin-bottom: 20px;
+}
+.action-list { list-style: none; padding: 0; margin: 0; }
+.action-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px; border-bottom: 1px solid var(--grey-100); gap: 12px;
+}
+.action-list li:last-child { border-bottom: 0; }
+.action-detail { flex: 1; }
+.action-buttons { display: flex; gap: 6px; }
+
+.agent-card {
+  background: var(--white); padding: 12px;
+  border: 1px solid var(--grey-100); border-radius: var(--radius);
+}
+.agent-card .ac-name { font-weight: 600; font-size: 14px; }
+.agent-card .ac-stats { display: flex; gap: 16px; margin-top: 8px; }
+.agent-card .ac-stat .s-label { font-size: 11px; color: var(--grey-500); text-transform: uppercase; font-weight: 600; }
+.agent-card .ac-stat .s-value { font-size: 16px; font-weight: 700; color: var(--brand-grey); }
+
+/* ===== Technician queue specific ===== */
+.queue-row {
+  display: grid; grid-template-columns: 110px 1fr 130px 180px 90px;
+  gap: 12px; align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--grey-100);
+  font-size: 13px;
+  cursor: pointer;
+}
+.queue-row:hover { background: var(--brand-green-50); }
+.queue-row .q-num { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-weight: 700; color: var(--brand-green-deep); font-size: 13px; }
+.queue-row .q-title { font-weight: 600; }
+.queue-row .q-sub { font-size: 11.5px; color: var(--grey-500); margin-top: 2px; }
+.queue-row .q-age { color: var(--grey-500); }
+.queue-row .q-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+.focus-card {
+  background: var(--white); border: 1px solid var(--grey-100); border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow-sm);
+  display: flex; gap: 12px; align-items: center;
+}
+.focus-card.priority { border-left: 4px solid var(--amber-500); }
+.focus-card.go       { border-left: 4px solid var(--brand-green); }
+.focus-num {
+  width: 64px; height: 64px; border-radius: 8px;
+  background: var(--brand-green-tint); color: var(--brand-green-deep);
+  display: grid; place-items: center;
+  font-family: ui-monospace, monospace; font-weight: 700; font-size: 11px;
+  text-align: center; padding: 6px; line-height: 1.1;
+}
+.focus-card.priority .focus-num { background: var(--amber-50); color: var(--amber-700); }
+
+/* ===== Utility ===== */
+.row { display: flex; gap: 12px; align-items: center; }
+.row-between { display: flex; justify-content: space-between; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.mb { margin-bottom: 16px; }
+.mt { margin-top: 16px; }
+.mt-sm { margin-top: 8px; }
+.muted { color: var(--grey-500); }
+.divider { height: 1px; background: var(--grey-100); margin: 14px 0; }
+
+/* ===== Screen visibility ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== Banner ===== */
+.proto-banner {
+  background: var(--brand-green-tint); color: var(--brand-green-deep);
+  padding: 7px 28px; font-size: 12px;
+  border-bottom: 1px solid var(--brand-green);
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .kpi-grid, .stages-strip, .detail-grid, .form-grid, .summary-grid { grid-template-columns: 1fr; }
+  .stages-strip { grid-template-columns: repeat(2, 1fr); }
+  .detail-meta { grid-template-columns: repeat(2, 1fr); }
+  .queue-row { grid-template-columns: 1fr; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <!-- Gentick logo recreated faithfully: GEN in dark grey, TICK in green,
+             green clock-mark right of it, ELECTRONICS below, tagline bar.
+             Swap this entire <svg> with your <img src="logo.png"> when you provide the file. -->
+        <svg viewBox="0 0 420 130" xmlns="http://www.w3.org/2000/svg" aria-label="Gentick Electronics — Experts in Telemetry Systems">
+          <!-- GEN -->
+          <text x="0" y="62" font-family="Helvetica, Arial, sans-serif" font-weight="800" font-size="62" fill="#413F42" letter-spacing="-2">GEN</text>
+          <!-- TICK -->
+          <text x="125" y="62" font-family="Helvetica, Arial, sans-serif" font-weight="800" font-size="62" fill="#72C044" letter-spacing="-2">TICK</text>
+
+          <!-- Green clock / checkmark icon, top right -->
+          <g transform="translate(322, 14)">
+            <circle cx="33" cy="33" r="28" fill="none" stroke="#413F42" stroke-width="1.5" stroke-dasharray="3 4" />
+            <!-- big bold green check -->
+            <path d="M14 36 L29 50 L56 18" fill="none" stroke="#72C044" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+
+          <!-- ELECTRONICS -->
+          <text x="0" y="92" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="22" fill="#413F42" letter-spacing="6">ELECTRONICS</text>
+
+          <!-- Tagline bar -->
+          <rect x="0" y="102" width="320" height="22" fill="#413F42"/>
+          <text x="160" y="118" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="11" fill="#FFFFFF" letter-spacing="2">EXPERTS IN TELEMETRY SYSTEMS</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <h4>Internal — Staff</h4>
+      <button class="nav-item active" data-screen="staff-dashboard"><span class="nav-icon">▦</span> Admin dashboard</button>
+      <button class="nav-item" data-screen="tech-queue"><span class="nav-icon">🛠</span> Technician queue</button>
+      <button class="nav-item" data-screen="staff-job-detail"><span class="nav-icon">⬢</span> Job detail</button>
+      <button class="nav-item" data-screen="staff-intake"><span class="nav-icon">＋</span> New intake</button>
+    </div>
+
+    <div class="nav-section">
+      <h4>External — Portals</h4>
+      <button class="nav-item" data-screen="agent-portal"><span class="nav-icon">▣</span> Agent portal</button>
+      <button class="nav-item" data-screen="main-customer"><span class="nav-icon">⌂</span> Main customer portal</button>
+    </div>
+
+    <div class="role-switcher">
+      <h4>Preview as</h4>
+      <button class="role-btn active" data-role="admin" data-screen="staff-dashboard">Lucia · Admin</button>
+      <button class="role-btn" data-role="technician" data-screen="tech-queue">Naledi · Technician</button>
+      <button class="role-btn" data-role="frontdesk" data-screen="staff-intake">Pieter · Front Desk</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div class="proto-banner">
+      <span>📐 Wireframe prototype v1.1 — sample data, click sidebar or role chips to switch views. Not a working app.</span>
+      <span>Gentick RMS · Phase 3</span>
+    </div>
+
+    <!-- ====== STAFF DASHBOARD (ADMIN) ====== -->
+    <section class="screen active" id="staff-dashboard">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb">Internal portal · Admin dashboard</div>
+          <h1>Good morning, Lucia 👋</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary">Export CSV</button>
+          <button class="btn btn-primary" onclick="show('staff-intake')">+ New intake</button>
+          <div class="user-chip"><div class="avatar">LM</div> Lucia M.</div>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Active jobs</div>
+            <div class="kpi-value">47</div>
+            <div class="kpi-meta"><span class="up">▲ 8</span> vs last week</div>
+          </div>
+          <div class="kpi amber">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Aged &gt; 14 days</div>
+            <div class="kpi-value">6</div>
+            <div class="kpi-meta">Needs attention</div>
+          </div>
+          <div class="kpi blue">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Avg turnaround</div>
+            <div class="kpi-value">7.2d</div>
+            <div class="kpi-meta"><span class="up">▼ 0.8d</span> vs last month</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Revenue this month</div>
+            <div class="kpi-value">R 84,210</div>
+            <div class="kpi-meta">12 jobs invoiced</div>
+          </div>
+        </div>
+
+        <div class="stages-strip">
+          <div class="stage-cell"><div class="stage-name">Received</div><div class="stage-count">5</div></div>
+          <div class="stage-cell"><div class="stage-name">Diagnosed</div><div class="stage-count">4</div></div>
+          <div class="stage-cell hot"><div class="stage-name">Quoted</div><div class="stage-count">9</div></div>
+          <div class="stage-cell"><div class="stage-name">Approved</div><div class="stage-count">3</div></div>
+          <div class="stage-cell hot"><div class="stage-name">In Progress</div><div class="stage-count">12</div></div>
+          <div class="stage-cell"><div class="stage-name">QC</div><div class="stage-count">4</div></div>
+          <div class="stage-cell"><div class="stage-name">Boxed</div><div class="stage-count">3</div></div>
+          <div class="stage-cell cool"><div class="stage-name">Ready</div><div class="stage-count">2</div></div>
+          <div class="stage-cell"><div class="stage-name">Collected</div><div class="stage-count">3</div></div>
+          <div class="stage-cell"><div class="stage-name">Closed (mo)</div><div class="stage-count">12</div></div>
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Active jobs</h2>
+              <div class="row">
+                <select style="padding:6px 10px;border:1px solid var(--grey-200);border-radius:6px;font-size:12.5px;">
+                  <option>All customers</option><option>Acme Agritech</option><option>Karoo Co-op</option>
+                </select>
+                <button class="btn btn-secondary btn-sm">Filter</button>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Job</th><th>Customer / Agent</th><th>Unit</th><th>Stage</th><th>Tech</th><th class="right">Age</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="show('staff-job-detail')">
+                  <td><span class="job-num">GT-ACME-0184</span></td>
+                  <td>Acme Agritech · Sipho M.</td>
+                  <td>4Gee TU · SN-21A847</td>
+                  <td><span class="badge amber dot">Quoted</span></td>
+                  <td>Naledi</td>
+                  <td class="right num">3d</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-ACME-0183</span></td>
+                  <td>Acme Agritech · Thandi K.</td>
+                  <td>Soil Probe v2 · SN-19B033</td>
+                  <td><span class="badge blue dot">In Progress</span></td>
+                  <td>Naledi</td>
+                  <td class="right num">5d</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-KAROO-0042</span></td>
+                  <td>Karoo Co-op · J. de Bruin</td>
+                  <td>4Gee TU · SN-22C771</td>
+                  <td><span class="badge red dot">Aged</span></td>
+                  <td>Naledi</td>
+                  <td class="right num">17d</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-ACME-0182</span></td>
+                  <td>Acme Agritech · Sipho M.</td>
+                  <td>Weather Stn. · SN-20F198</td>
+                  <td><span class="badge green dot">Boxed</span></td>
+                  <td>Pieter</td>
+                  <td class="right num">2d</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-GEN-0007</span></td>
+                  <td>Walk-in · Mr. P. Botha</td>
+                  <td>4Gee TU · SN-22B450</td>
+                  <td><span class="badge grey dot">Received</span></td>
+                  <td>—</td>
+                  <td class="right num">1d</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-KAROO-0041</span></td>
+                  <td>Karoo Co-op · A. Khumalo</td>
+                  <td>Soil Probe v2 · SN-21D902</td>
+                  <td><span class="badge amber dot">Quoted</span></td>
+                  <td>Lucia</td>
+                  <td class="right num">4d</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col">
+
+            <div class="card">
+              <div class="card-header"><h2>Today's priorities</h2></div>
+              <div class="card-body" style="padding: 4px 0;">
+                <ul class="tl" style="padding: 14px 18px;">
+                  <li><div class="tl-dot" style="background:var(--amber-500); box-shadow:0 0 0 1px var(--amber-500);"></div>
+                    <div class="tl-title">9 quotes awaiting customer approval</div>
+                    <div class="tl-body">Oldest: GT-ACME-0184 · 3 days waiting</div>
+                  </li>
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">3 units boxed, awaiting collection notification</div>
+                    <div class="tl-body">All triggered automatically when marked Boxed</div>
+                  </li>
+                  <li class="muted"><div class="tl-dot"></div>
+                    <div class="tl-title">Sage export ready for download</div>
+                    <div class="tl-body">5 invoices in batch · generated today 08:14</div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Common faults this month</h2></div>
+              <div class="card-body">
+                <div style="display:flex; gap:12px; flex-direction:column;">
+                  <div>
+                    <div class="row-between" style="margin-bottom:4px;">
+                      <span style="font-size:12.5px;">Component failure</span><strong style="font-size:13px;">14</strong>
+                    </div>
+                    <div style="background:var(--grey-100);border-radius:3px;height:6px;"><div style="background:var(--brand-green);width:70%;height:100%;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div class="row-between" style="margin-bottom:4px;">
+                      <span style="font-size:12.5px;">Lightning damage</span><strong style="font-size:13px;">8</strong>
+                    </div>
+                    <div style="background:var(--grey-100);border-radius:3px;height:6px;"><div style="background:var(--amber-500);width:40%;height:100%;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div class="row-between" style="margin-bottom:4px;">
+                      <span style="font-size:12.5px;">Power supply failure</span><strong style="font-size:13px;">5</strong>
+                    </div>
+                    <div style="background:var(--grey-100);border-radius:3px;height:6px;"><div style="background:var(--grey-400);width:25%;height:100%;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div class="row-between" style="margin-bottom:4px;">
+                      <span style="font-size:12.5px;">Water damage</span><strong style="font-size:13px;">2</strong>
+                    </div>
+                    <div style="background:var(--grey-100);border-radius:3px;height:6px;"><div style="background:var(--grey-400);width:10%;height:100%;border-radius:3px;"></div></div>
+                  </div>
+                </div>
+                <a href="#" style="display:inline-block; margin-top:14px; font-size:12.5px;">Open full report →</a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====== TECHNICIAN QUEUE (NEW) ====== -->
+    <section class="screen" id="tech-queue">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb">Internal portal · Technician queue</div>
+          <h1>My queue · Naledi 🛠</h1>
+        </div>
+        <div class="topbar-actions">
+          <select style="padding:7px 10px;border:1px solid var(--grey-200);border-radius:6px;font-size:13px;">
+            <option>Show: My jobs only</option>
+            <option>Show: All technicians</option>
+          </select>
+          <button class="btn btn-secondary">Settings</button>
+          <div class="user-chip"><div class="avatar" style="background:var(--brand-green);">ND</div> Naledi D.</div>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Assigned to me</div>
+            <div class="kpi-value">12</div>
+            <div class="kpi-meta">3 received, 4 diagnosed, 5 in progress</div>
+          </div>
+          <div class="kpi amber">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Awaiting parts</div>
+            <div class="kpi-value">2</div>
+            <div class="kpi-meta">PSU-4G-A · Probe Cable v3</div>
+          </div>
+          <div class="kpi blue">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">My avg turnaround</div>
+            <div class="kpi-value">5.8d</div>
+            <div class="kpi-meta">Faster than team avg (7.2d)</div>
+          </div>
+          <div class="kpi grey">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Closed this week</div>
+            <div class="kpi-value">8</div>
+            <div class="kpi-meta">Personal best</div>
+          </div>
+        </div>
+
+        <h2 style="margin-bottom:10px;">Today's focus</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:24px;">
+
+          <div class="focus-card priority">
+            <div class="focus-num">GT-KAROO<br>0042</div>
+            <div style="flex:1;">
+              <div style="font-weight:600; font-size:13.5px;">Aged 17 days — escalate</div>
+              <div style="color:var(--grey-500); font-size:12.5px; margin-top:3px;">4Gee TU · waiting on probe-comm chip diagnosis</div>
+              <div style="margin-top:8px; display:flex; gap:6px;">
+                <button class="btn btn-amber btn-sm">Diagnose now</button>
+                <button class="btn btn-ghost btn-sm">Open</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="focus-card go">
+            <div class="focus-num">GT-ACME<br>0183</div>
+            <div style="flex:1;">
+              <div style="font-weight:600; font-size:13.5px;">Parts arrived — resume repair</div>
+              <div style="color:var(--grey-500); font-size:12.5px; margin-top:3px;">Soil Probe v2 · PSU-4G-A now on bench</div>
+              <div style="margin-top:8px; display:flex; gap:6px;">
+                <button class="btn btn-primary btn-sm">Mark In Progress</button>
+                <button class="btn btn-ghost btn-sm">Open</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="focus-card go">
+            <div class="focus-num">GT-ACME<br>0179</div>
+            <div style="flex:1;">
+              <div style="font-weight:600; font-size:13.5px;">Ready for QC</div>
+              <div style="color:var(--grey-500); font-size:12.5px; margin-top:3px;">Probe recalibrated · waiting on bench check</div>
+              <div style="margin-top:8px; display:flex; gap:6px;">
+                <button class="btn btn-primary btn-sm">Run QC checklist</button>
+                <button class="btn btn-ghost btn-sm">Open</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="card">
+            <div class="card-header">
+              <h2>My full queue (12)</h2>
+              <div class="row">
+                <select style="padding:6px 10px;border:1px solid var(--grey-200);border-radius:6px;font-size:12.5px;">
+                  <option>Sort: oldest first</option>
+                  <option>Sort: by stage</option>
+                  <option>Sort: by customer</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <!-- Queue rows -->
+              <div class="queue-row" onclick="show('staff-job-detail')">
+                <div><div class="q-num">GT-KAROO-0042</div></div>
+                <div>
+                  <div class="q-title">4Gee TU · SN-22C771</div>
+                  <div class="q-sub">Karoo Co-op · J. de Bruin · suspected chip-probe comm</div>
+                </div>
+                <div><span class="badge red dot">Aged · 17d</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-amber btn-sm">Diagnose</button>
+                  <button class="btn btn-secondary btn-sm">📷</button>
+                </div>
+                <div class="q-age" style="text-align:right;">17d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0184</div></div>
+                <div>
+                  <div class="q-title">4Gee TU · SN-21A847 <span class="badge">3rd repair</span></div>
+                  <div class="q-sub">Acme · Sipho M. · PSU board confirmed failed</div>
+                </div>
+                <div><span class="badge amber dot">Quoted</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-ghost btn-sm">Awaiting approval</button>
+                </div>
+                <div class="q-age" style="text-align:right;">3d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0183</div></div>
+                <div>
+                  <div class="q-title">Soil Probe v2 · SN-19B033</div>
+                  <div class="q-sub">Acme · Thandi K. · awaiting PSU-4G-A — arrived 09:12</div>
+                </div>
+                <div><span class="badge green dot">Parts arrived</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-primary btn-sm">Resume</button>
+                  <button class="btn btn-secondary btn-sm">+ Part</button>
+                </div>
+                <div class="q-age" style="text-align:right;">5d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0179</div></div>
+                <div>
+                  <div class="q-title">Soil Probe v2 · SN-22F019</div>
+                  <div class="q-sub">Acme · Sipho M. · recalibration complete</div>
+                </div>
+                <div><span class="badge blue dot">Needs QC</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-primary btn-sm">QC</button>
+                  <button class="btn btn-secondary btn-sm">📷</button>
+                </div>
+                <div class="q-age" style="text-align:right;">4d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0181</div></div>
+                <div>
+                  <div class="q-title">Soil Probe v2 · SN-22B017</div>
+                  <div class="q-sub">Acme · Thandi K. · quote sent, awaiting approval</div>
+                </div>
+                <div><span class="badge amber dot">Quoted</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-ghost btn-sm">Awaiting approval</button>
+                </div>
+                <div class="q-age" style="text-align:right;">2d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0186</div></div>
+                <div>
+                  <div class="q-title">Weather Stn. · SN-22G401</div>
+                  <div class="q-sub">Acme · Hendrik B. · just received</div>
+                </div>
+                <div><span class="badge grey dot">Received</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-primary btn-sm">Start diagnosis</button>
+                </div>
+                <div class="q-age" style="text-align:right;">2h</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-GEN-0007</div></div>
+                <div>
+                  <div class="q-title">4Gee TU · SN-22B450</div>
+                  <div class="q-sub">Walk-in · Mr. P. Botha · just received</div>
+                </div>
+                <div><span class="badge grey dot">Received</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-primary btn-sm">Start diagnosis</button>
+                </div>
+                <div class="q-age" style="text-align:right;">1d</div>
+              </div>
+
+              <div class="queue-row">
+                <div><div class="q-num">GT-ACME-0173</div></div>
+                <div>
+                  <div class="q-title">Weather Stn. · SN-20F198</div>
+                  <div class="q-sub">Acme · Sipho M. · awaiting box-up</div>
+                </div>
+                <div><span class="badge green dot">QC passed</span></div>
+                <div class="q-actions">
+                  <button class="btn btn-primary btn-sm">Mark boxed</button>
+                </div>
+                <div class="q-age" style="text-align:right;">6d</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="col">
+
+            <div class="card">
+              <div class="card-header"><h2>Quick log</h2></div>
+              <div class="card-body" style="padding:14px;">
+                <p style="margin:0 0 12px; font-size:12.5px; color:var(--grey-500);">Add a note or log parts used against the job I'm working on.</p>
+                <div class="field" style="margin-bottom:10px;">
+                  <label>Working on</label>
+                  <select>
+                    <option>GT-ACME-0183 · Soil Probe v2</option>
+                    <option>GT-ACME-0179 · Soil Probe v2</option>
+                    <option>GT-KAROO-0042 · 4Gee TU</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <button class="btn btn-secondary btn-sm" style="flex:1; justify-content:center;">+ Note</button>
+                  <button class="btn btn-secondary btn-sm" style="flex:1; justify-content:center;">+ Part</button>
+                  <button class="btn btn-secondary btn-sm" style="flex:1; justify-content:center;">📷 Photo</button>
+                </div>
+                <div class="field">
+                  <textarea placeholder="Diagnosis note, internal-only by default..." style="min-height:64px;"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Save log entry</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Awaiting parts</h2></div>
+              <div class="card-body" style="padding:14px;">
+                <ul class="tl">
+                  <li><div class="tl-dot" style="background:var(--amber-500); box-shadow:0 0 0 1px var(--amber-500);"></div>
+                    <div class="tl-title">PSU-4G-A · ordered</div>
+                    <div class="tl-time">For GT-ACME-0183 · ETA today</div></li>
+                  <li><div class="tl-dot" style="background:var(--amber-500); box-shadow:0 0 0 1px var(--amber-500);"></div>
+                    <div class="tl-title">Probe Cable v3 · ordered</div>
+                    <div class="tl-time">For GT-KAROO-0038 · ETA Mon 02 Jun</div></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>This week</h2></div>
+              <div class="card-body">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+                  <div>
+                    <div style="font-size:11.5px;color:var(--grey-500);text-transform:uppercase; font-weight:600;">Closed</div>
+                    <div style="font-size:22px; font-weight:700; color:var(--brand-green-deep);">8</div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px;color:var(--grey-500);text-transform:uppercase; font-weight:600;">QC pass rate</div>
+                    <div style="font-size:22px; font-weight:700;">100%</div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px;color:var(--grey-500);text-transform:uppercase; font-weight:600;">Re-opens</div>
+                    <div style="font-size:22px; font-weight:700;">0</div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px;color:var(--grey-500);text-transform:uppercase; font-weight:600;">Hrs logged</div>
+                    <div style="font-size:22px; font-weight:700;">34.5</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ====== STAFF JOB DETAIL ====== -->
+    <section class="screen" id="staff-job-detail">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb"><a href="#" onclick="show('staff-dashboard');return false;">Dashboard</a> · Job detail</div>
+          <h1>GT-ACME-0184 · 4Gee Telemetry Unit · Quoted</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary">Print jobcard</button>
+          <button class="btn btn-secondary">⋯ More</button>
+          <button class="btn btn-primary">Advance stage →</button>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="stage-timeline">
+          <div class="stage-pip done">Received</div>
+          <div class="stage-pip done">Diagnosed</div>
+          <div class="stage-pip now">Quoted</div>
+          <div class="stage-pip future">Approved</div>
+          <div class="stage-pip future">In Progress</div>
+          <div class="stage-pip future">QC</div>
+          <div class="stage-pip future">Boxed</div>
+          <div class="stage-pip future">Ready</div>
+          <div class="stage-pip future">Collected</div>
+          <div class="stage-pip future">Closed</div>
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item"><div class="meta-label">Main customer</div><div class="meta-value">Acme Agritech</div></div>
+          <div class="meta-item"><div class="meta-label">Agent</div><div class="meta-value">Sipho Mthembu · Karoo Farms</div></div>
+          <div class="meta-item"><div class="meta-label">Unit</div><div class="meta-value">4Gee TU · SN-21A847 <span class="badge">3rd repair</span></div></div>
+          <div class="meta-item"><div class="meta-label">Originator</div><div class="meta-value">Agent · 28 May 2026</div></div>
+          <div class="meta-item"><div class="meta-label">Received</div><div class="meta-value">29 May 2026 (3 days ago)</div></div>
+          <div class="meta-item"><div class="meta-label">Technician</div><div class="meta-value">Naledi Dube</div></div>
+          <div class="meta-item"><div class="meta-label">Repair type</div><div class="meta-value">Telemetry — Power supply</div></div>
+          <div class="meta-item"><div class="meta-label">Shipment</div><div class="meta-value">SHP-0438 · Tracking AB12384</div></div>
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="col">
+            <div class="card">
+              <div class="tab-strip" style="padding: 0 16px;">
+                <button class="tab active">Diagnosis & notes</button>
+                <button class="tab">Photos (5)</button>
+                <button class="tab">Parts (3)</button>
+                <button class="tab">Quote</button>
+                <button class="tab">Messages</button>
+                <button class="tab">History</button>
+              </div>
+              <div class="card-body">
+                <h3 style="margin-bottom:8px;">Fault description (from agent)</h3>
+                <p style="margin:0 0 16px; color:var(--brand-grey); font-size:13px;">
+                  Unit stopped sending readings on 26 May around 14:00. No physical damage visible. Was working fine the morning before. Power LED is on but signal LED is off.
+                </p>
+
+                <h3 style="margin-bottom:8px;">Accessories shipped</h3>
+                <p style="margin:0 0 16px; color:var(--brand-grey); font-size:13px;">Power adapter, antenna, SIM holder cover.</p>
+
+                <h3 style="margin-bottom:8px;">Technician diagnosis · Internal only</h3>
+                <p style="margin:0 0 16px; color:var(--brand-grey); font-size:13px;">
+                  Power supply board failed — capacitor C14 leaked, took out the regulator. Probe-communication chip survived. Replacing PSU board and recalibrating. ETA 2 days once parts on bench.
+                </p>
+
+                <h3 style="margin-bottom:8px;">Customer-facing note</h3>
+                <p style="margin:0 0 16px; color:var(--brand-grey); font-size:13px;">
+                  Power supply needs replacement. Quote sent — repair time approximately 2 working days from approval.
+                </p>
+
+                <h4 style="margin-bottom:10px;">Photos</h4>
+                <div class="photo-grid">
+                  <div class="photo-tile">Intake photo<br>(front)</div>
+                  <div class="photo-tile">Intake photo<br>(back)</div>
+                  <div class="photo-tile">PSU board<br>damage</div>
+                  <div class="photo-tile">Capacitor<br>close-up</div>
+                  <div class="photo-tile" style="border-style:solid;background:var(--brand-green-50);color:var(--brand-green-deep);">+ Upload</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Quote · Q-GT-ACME-0184-1</h2><span class="badge amber dot">Awaiting approval</span></div>
+              <table class="table">
+                <thead>
+                  <tr><th>Description</th><th class="right">Qty</th><th class="right">Unit (ZAR)</th><th class="right">Total</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Labour · diagnosis + repair (2.5h)</td><td class="right num">2.5</td><td class="right num">650.00</td><td class="right num">1,625.00</td></tr>
+                  <tr><td>PSU board assembly (PSU-4G-A)</td><td class="right num">1</td><td class="right num">1,140.00</td><td class="right num">1,140.00</td></tr>
+                  <tr><td>Recalibration & QC (0.5h)</td><td class="right num">0.5</td><td class="right num">650.00</td><td class="right num">325.00</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><td colspan="3" class="right" style="font-weight:500;">Subtotal</td><td class="right num">3,090.00</td></tr>
+                  <tr><td colspan="3" class="right" style="font-weight:500;">VAT @ 15%</td><td class="right num">463.50</td></tr>
+                  <tr><td colspan="3" class="right" style="font-weight:700; font-size:14px;">Total (ZAR)</td><td class="right num" style="font-weight:700; font-size:14px;">3,553.50</td></tr>
+                </tfoot>
+              </table>
+              <div class="card-body" style="display:flex; gap:8px;">
+                <button class="btn btn-secondary">View PDF</button>
+                <button class="btn btn-secondary">Resend to customer</button>
+                <button class="btn btn-amber">Mark approved manually</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+
+            <div class="card">
+              <div class="card-header"><h2>Communications log</h2></div>
+              <div class="card-body" style="padding:14px 16px;">
+                <div class="msg-list">
+                  <div class="msg out">
+                    Hi Johan, your repair quote for GT-ACME-0184 is ready (R 3,553.50 incl VAT). Reply YES to approve or open the portal.
+                    <div class="msg-meta">via WhatsApp · 31 May 09:14 · Delivered</div>
+                  </div>
+                  <div class="msg in">
+                    Got it, will review with the team and come back this afternoon.
+                    <div class="msg-meta">Johan @ Acme · 31 May 09:31</div>
+                  </div>
+                  <div class="msg out">
+                    Hi Sipho, we've received your unit (SN-21A847) and it's been diagnosed. Power supply needs replacing — quote sent to Johan for approval.
+                    <div class="msg-meta">via WhatsApp · 30 May 16:42 · Read</div>
+                  </div>
+                </div>
+                <div style="margin-top:12px; padding:10px; background:var(--grey-50); border-radius:6px; font-size:12px; color:var(--grey-500);">
+                  Replies are auto-classified. YES/NO routed to quote approval; anything else escalates to Michael (082 374 9842).
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Stage history</h2></div>
+              <div class="card-body" style="padding:14px 16px;">
+                <ul class="tl">
+                  <li><div class="tl-dot" style="background:var(--amber-500); box-shadow:0 0 0 1px var(--amber-500);"></div>
+                    <div class="tl-title">Quoted</div>
+                    <div class="tl-time">31 May 09:14 · Lucia</div>
+                    <div class="tl-body">Quote v1 issued, WhatsApp + email sent</div>
+                  </li>
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">Diagnosed</div>
+                    <div class="tl-time">30 May 14:20 · Naledi</div>
+                    <div class="tl-body">PSU board failure confirmed</div>
+                  </li>
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">Received</div>
+                    <div class="tl-time">29 May 11:05 · Pieter</div>
+                    <div class="tl-body">From SHP-0438, condition: intact</div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>This unit's history</h2></div>
+              <div class="card-body" style="padding:14px 16px;">
+                <p class="muted" style="margin:0 0 10px; font-size:12.5px;">SN-21A847 has been in for repair 3 times.</p>
+                <ul class="tl">
+                  <li class="muted"><div class="tl-dot"></div>
+                    <div class="tl-title">GT-ACME-0152 · Lightning damage</div>
+                    <div class="tl-time">Sep 2025 · Closed</div></li>
+                  <li class="muted"><div class="tl-dot"></div>
+                    <div class="tl-title">GT-ACME-0089 · Component failure</div>
+                    <div class="tl-time">Mar 2025 · Closed</div></li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====== STAFF INTAKE ====== -->
+    <section class="screen" id="staff-intake">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb"><a href="#" onclick="show('staff-dashboard');return false;">Dashboard</a> · New intake</div>
+          <h1>New shipment intake</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary">Save draft</button>
+          <button class="btn btn-primary">Receive shipment</button>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="card mb">
+          <div class="card-header"><h2>Step 1 — Shipment details</h2></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="field">
+                <label>Origin</label>
+                <select>
+                  <option>Main customer (pre-registered)</option>
+                  <option selected>Agent (pre-registered)</option>
+                  <option>Walk-in / unannounced</option>
+                </select>
+                <span class="hint">Walk-in needs you to identify customer/agent before save.</span>
+              </div>
+              <div class="field">
+                <label>Originator</label>
+                <select>
+                  <option>Acme Agritech — Sipho Mthembu</option>
+                  <option>Acme Agritech — Thandi Khumalo</option>
+                  <option>Karoo Co-op — Jaco de Bruin</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Courier tracking number</label>
+                <input type="text" value="AB12384" />
+              </div>
+              <div class="field">
+                <label>Received at</label>
+                <input type="datetime-local" value="2026-05-31T11:05" />
+              </div>
+              <div class="field span-2">
+                <label>Shipment notes (optional)</label>
+                <input type="text" placeholder="e.g., box arrived slightly damaged; unit padding intact" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb">
+          <div class="card-header">
+            <h2>Step 2 — Units in this shipment</h2>
+            <button class="btn btn-secondary btn-sm">+ Add another unit</button>
+          </div>
+          <div class="card-body">
+
+            <div style="padding:14px; border:1px solid var(--brand-green); background:var(--brand-green-50); border-radius:8px; margin-bottom:12px;">
+              <div class="row-between" style="margin-bottom:10px;">
+                <h3>Unit 1 of 2</h3>
+                <button class="btn btn-ghost btn-sm">Remove</button>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Serial number</label>
+                  <input type="text" value="SN-21A847" />
+                  <span class="hint" style="color:var(--amber-700);">⚠ This unit has been here before (2 prior repairs) — auto-linked.</span>
+                </div>
+                <div class="field">
+                  <label>Unit type</label>
+                  <select><option>4Gee Telemetry Unit</option><option>Soil Probe v2</option><option>Weather Station</option></select>
+                </div>
+                <div class="field span-2">
+                  <label>Fault description</label>
+                  <textarea>Unit stopped sending readings on 26 May around 14:00. No physical damage visible.</textarea>
+                </div>
+                <div class="field span-2">
+                  <label>Accessories shipped with the unit</label>
+                  <input type="text" value="Power adapter, antenna, SIM holder cover" />
+                </div>
+                <div class="field span-2">
+                  <label>Intake photos</label>
+                  <div class="photo-grid">
+                    <div class="photo-tile">📷<br>front</div>
+                    <div class="photo-tile">📷<br>back</div>
+                    <div class="photo-tile" style="border-style:solid;background:var(--brand-green-tint);color:var(--brand-green-deep);">+ Add</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding:14px; border:1px solid var(--grey-200); border-radius:8px;">
+              <div class="row-between" style="margin-bottom:10px;">
+                <h3>Unit 2 of 2</h3>
+                <button class="btn btn-ghost btn-sm">Remove</button>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Serial number</label>
+                  <input type="text" value="SN-22F019" />
+                </div>
+                <div class="field">
+                  <label>Unit type</label>
+                  <select><option>Soil Probe v2</option></select>
+                </div>
+                <div class="field span-2">
+                  <label>Fault description</label>
+                  <textarea>Probe readings drifted gradually over last 2 weeks. Recalibration unsuccessful in field.</textarea>
+                </div>
+                <div class="field span-2">
+                  <label>Accessories</label>
+                  <input type="text" value="Cable only" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb">
+          <div class="card-header"><h2>Step 3 — Confirm and notify</h2></div>
+          <div class="card-body">
+            <p style="margin:0 0 12px; color:var(--brand-grey);">On save the system will:</p>
+            <ul style="margin:0 0 14px; padding-left:18px; color:var(--brand-grey); font-size:13.5px; line-height:1.7;">
+              <li>Generate job numbers <code>GT-ACME-0185</code>, <code>GT-ACME-0186</code></li>
+              <li>Link Unit 1 (SN-21A847) to its existing record · Unit 2 (SN-22F019) becomes a new persistent unit</li>
+              <li>Send WhatsApp + email "Item received" notification to Johan (main customer) AND Sipho (agent)</li>
+              <li>Email the jobcards to Sipho</li>
+              <li>Move both jobs into stage <strong>Received</strong></li>
+            </ul>
+
+            <div class="checkbox-row">
+              <input type="checkbox" checked id="extras">
+              <label for="extras">No extra unannounced units were found in this shipment. Tick to confirm — if extras exist, add them above first.</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; gap:8px;">
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary" style="padding:11px 22px;">✓ Receive shipment & notify</button>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ====== AGENT PORTAL (web) ====== -->
+    <section class="screen" id="agent-portal">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb">External · Agent portal</div>
+          <h1>My repairs · Sipho Mthembu</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary">My profile</button>
+          <button class="btn btn-primary">+ Book new repair</button>
+          <div class="user-chip"><div class="avatar" style="background:var(--brand-green);">SM</div> Sipho M.</div>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">My active repairs</div>
+            <div class="kpi-value">3</div>
+            <div class="kpi-meta">Last update: today 09:14</div>
+          </div>
+          <div class="kpi amber">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Awaiting Acme approval</div>
+            <div class="kpi-value">1</div>
+            <div class="kpi-meta">GT-ACME-0184 · 3 days waiting</div>
+          </div>
+          <div class="kpi grey">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Ready for collection</div>
+            <div class="kpi-value">1</div>
+            <div class="kpi-meta">Courier booked Mon 02 Jun</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Completed (YTD)</div>
+            <div class="kpi-value">11</div>
+            <div class="kpi-meta">Avg turnaround 7.4 days</div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="card">
+            <div class="card-header">
+              <h2>My repairs</h2>
+              <div class="row">
+                <select style="padding:6px 10px;border:1px solid var(--grey-200);border-radius:6px;font-size:12.5px;">
+                  <option>Active only</option><option>Include closed</option>
+                </select>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr><th>Job</th><th>Unit</th><th>Stage</th><th>Status</th><th class="right">Submitted</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="job-num">GT-ACME-0184</span></td>
+                  <td>4Gee TU · SN-21A847</td>
+                  <td><span class="badge amber dot">Quoted</span></td>
+                  <td>Waiting for Johan to approve · R 3,553.50</td>
+                  <td class="right num">28 May</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-ACME-0179</span></td>
+                  <td>Soil Probe v2 · SN-22F019</td>
+                  <td><span class="badge blue dot">In Progress</span></td>
+                  <td>With Naledi · ETA 2 working days</td>
+                  <td class="right num">25 May</td>
+                </tr>
+                <tr>
+                  <td><span class="job-num">GT-ACME-0173</span></td>
+                  <td>Weather Stn · SN-20F198</td>
+                  <td><span class="badge green dot">Ready for Collection</span></td>
+                  <td>Courier booked Mon 02 Jun</td>
+                  <td class="right num">18 May</td>
+                </tr>
+                <tr style="opacity:0.85;">
+                  <td><span class="job-num">GT-ACME-0168</span></td>
+                  <td>4Gee TU · SN-21A847</td>
+                  <td><span class="badge green">Closed</span></td>
+                  <td>Closed 24 May · 8d turnaround</td>
+                  <td class="right num">16 May</td>
+                </tr>
+                <tr style="opacity:0.85;">
+                  <td><span class="job-num">GT-ACME-0156</span></td>
+                  <td>Soil Probe v2 · SN-21D902</td>
+                  <td><span class="badge green">Closed</span></td>
+                  <td>Closed 11 May · 6d turnaround</td>
+                  <td class="right num">05 May</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col">
+
+            <div class="card" style="background:linear-gradient(135deg, var(--brand-green), var(--brand-green-dark)); color:var(--white); border:0;">
+              <div style="padding:18px;">
+                <h2 style="color:var(--white);">📦 Book a new repair</h2>
+                <p style="margin:6px 0 12px; opacity:0.9; font-size:13px;">Register a unit, describe the fault, and ship it to Gentick. We'll notify Acme automatically.</p>
+                <button class="btn" style="background:var(--white); color:var(--brand-grey); font-weight:700;">Start a new repair →</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>My units</h2></div>
+              <div class="card-body" style="padding:14px;">
+                <p class="muted" style="margin:0 0 10px; font-size:12.5px;">All units I've sent in for repair before — pick one to pre-fill a new request.</p>
+                <ul class="tl">
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">SN-21A847 · 4Gee Telemetry Unit</div>
+                    <div class="tl-body">3 repairs · last fault: power supply</div></li>
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">SN-22F019 · Soil Probe v2</div>
+                    <div class="tl-body">2 repairs · currently in for repair</div></li>
+                  <li><div class="tl-dot"></div>
+                    <div class="tl-title">SN-20F198 · Weather Station</div>
+                    <div class="tl-body">1 repair · ready for collection</div></li>
+                  <li class="muted"><div class="tl-dot"></div>
+                    <div class="tl-title">SN-21D902 · Soil Probe v2</div>
+                    <div class="tl-body">1 repair · closed</div></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Communications</h2></div>
+              <div class="card-body" style="padding:14px;">
+                <div class="msg-list">
+                  <div class="msg in">
+                    Your repair quote for GT-ACME-0184 is ready (R 3,553.50). Johan has been notified to approve.
+                    <div class="msg-meta">Gentick · 31 May 09:14</div>
+                  </div>
+                  <div class="msg out">
+                    Thanks, will the unit be back before month-end?
+                    <div class="msg-meta">Today 09:42</div>
+                  </div>
+                </div>
+                <a href="#" style="display:inline-block; margin-top:10px; font-size:12.5px;">Open full conversation →</a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====== MAIN CUSTOMER PORTAL ====== -->
+    <section class="screen" id="main-customer">
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="crumb">External · Main customer portal</div>
+          <h1>Acme Agritech — repair overview</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary">Invite new agent</button>
+          <div class="user-chip"><div class="avatar" style="background:var(--blue-500);color:var(--white);">JK</div> Johan Kruger</div>
+        </div>
+      </header>
+
+      <div class="page">
+
+        <div class="summary-grid">
+          <div class="kpi">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Active repairs across your agents</div>
+            <div class="kpi-value">14</div>
+            <div class="kpi-meta">Across 6 agents · 4 unit types</div>
+          </div>
+          <div class="kpi amber">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Awaiting your approval</div>
+            <div class="kpi-value">3</div>
+            <div class="kpi-meta">Oldest 3 days · review below</div>
+          </div>
+          <div class="kpi blue">
+            <div class="kpi-bar"></div>
+            <div class="kpi-label">Avg turnaround (your jobs)</div>
+            <div class="kpi-value">7.4d</div>
+            <div class="kpi-meta">Last 90 days</div>
+          </div>
+        </div>
+
+        <div class="card mb">
+          <div class="card-header">
+            <h2>⚡ Action required — 3 quotes awaiting your approval</h2>
+            <span class="badge amber dot">3</span>
+          </div>
+          <ul class="action-list">
+            <li>
+              <div class="action-detail">
+                <div style="font-size:13.5px; font-weight:600;"><span class="job-num">GT-ACME-0184</span> · 4Gee Telemetry Unit · SN-21A847</div>
+                <div style="font-size:12.5px; color:var(--grey-500); margin-top:2px;">
+                  Agent: Sipho Mthembu · Fault: Power supply failure · Quoted: <strong>R 3,553.50 incl VAT</strong> · 3 days waiting
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm">View quote PDF</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--red-500);">Reject</button>
+                <button class="btn btn-primary btn-sm">✓ Approve</button>
+              </div>
+            </li>
+            <li>
+              <div class="action-detail">
+                <div style="font-size:13.5px; font-weight:600;"><span class="job-num">GT-ACME-0181</span> · Soil Probe v2 · SN-22B017</div>
+                <div style="font-size:12.5px; color:var(--grey-500); margin-top:2px;">
+                  Agent: Thandi Khumalo · Fault: Component failure · Quoted: <strong>R 1,842.00 incl VAT</strong> · 2 days waiting
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm">View quote PDF</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--red-500);">Reject</button>
+                <button class="btn btn-primary btn-sm">✓ Approve</button>
+              </div>
+            </li>
+            <li>
+              <div class="action-detail">
+                <div style="font-size:13.5px; font-weight:600;"><span class="job-num">GT-ACME-0177</span> · Weather Station · SN-20A442</div>
+                <div style="font-size:12.5px; color:var(--grey-500); margin-top:2px;">
+                  Agent: Hendrik Botha · Fault: Lightning damage · Quoted: <strong>R 4,920.00 incl VAT</strong> · 1 day waiting
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm">View quote PDF</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--red-500);">Reject</button>
+                <button class="btn btn-primary btn-sm">✓ Approve</button>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="card">
+            <div class="card-header">
+              <h2>All active jobs</h2>
+              <div class="row">
+                <select style="padding:6px 10px;border:1px solid var(--grey-200);border-radius:6px;font-size:12.5px;">
+                  <option>All agents</option><option>Sipho Mthembu</option><option>Thandi Khumalo</option>
+                </select>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr><th>Job</th><th>Agent</th><th>Stage</th><th class="right">Value (ZAR)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="job-num">GT-ACME-0184</span></td><td>Sipho Mthembu</td><td><span class="badge amber dot">Quoted</span></td><td class="right num">3,553.50</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0183</span></td><td>Thandi Khumalo</td><td><span class="badge blue dot">In Progress</span></td><td class="right num">2,140.00</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0181</span></td><td>Thandi Khumalo</td><td><span class="badge amber dot">Quoted</span></td><td class="right num">1,842.00</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0179</span></td><td>Sipho Mthembu</td><td><span class="badge blue dot">In Progress</span></td><td class="right num">2,860.00</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0177</span></td><td>Hendrik Botha</td><td><span class="badge amber dot">Quoted</span></td><td class="right num">4,920.00</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0173</span></td><td>Sipho Mthembu</td><td><span class="badge green dot">Ready</span></td><td class="right num">1,650.00</td></tr>
+                <tr><td><span class="job-num">GT-ACME-0170</span></td><td>Andile Khoza</td><td><span class="badge grey dot">Diagnosed</span></td><td class="right num">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col">
+
+            <div class="card">
+              <div class="card-header"><h2>Your agents</h2></div>
+              <div class="card-body" style="display:grid; gap:10px;">
+
+                <div class="agent-card">
+                  <div class="row-between">
+                    <div class="ac-name">Sipho Mthembu</div>
+                    <span class="badge green">Active</span>
+                  </div>
+                  <div class="ac-stats">
+                    <div class="ac-stat"><div class="s-label">Active</div><div class="s-value">3</div></div>
+                    <div class="ac-stat"><div class="s-label">YTD</div><div class="s-value">11</div></div>
+                  </div>
+                </div>
+
+                <div class="agent-card">
+                  <div class="row-between">
+                    <div class="ac-name">Thandi Khumalo</div>
+                    <span class="badge green">Active</span>
+                  </div>
+                  <div class="ac-stats">
+                    <div class="ac-stat"><div class="s-label">Active</div><div class="s-value">2</div></div>
+                    <div class="ac-stat"><div class="s-label">YTD</div><div class="s-value">7</div></div>
+                  </div>
+                </div>
+
+                <div class="agent-card">
+                  <div class="row-between">
+                    <div class="ac-name">Hendrik Botha</div>
+                    <span class="badge green">Active</span>
+                  </div>
+                  <div class="ac-stats">
+                    <div class="ac-stat"><div class="s-label">Active</div><div class="s-value">1</div></div>
+                    <div class="ac-stat"><div class="s-label">YTD</div><div class="s-value">4</div></div>
+                  </div>
+                </div>
+
+                <div class="agent-card" style="background:var(--grey-25); border-style:dashed;">
+                  <div class="row-between">
+                    <div class="ac-name muted">Pending invite · Karen N.</div>
+                    <span class="badge amber">Invited</span>
+                  </div>
+                  <div style="font-size:11.5px; color:var(--grey-500); margin-top:6px;">Expires 04 Jun · resend invite</div>
+                </div>
+
+                <button class="btn btn-secondary" style="width:100%; justify-content:center;">+ Invite a new agent</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h2>Spend this quarter</h2></div>
+              <div class="card-body">
+                <div style="font-size:28px;font-weight:700;">R 64,420</div>
+                <div class="muted" style="font-size:12.5px;">18 invoices · avg R 3,580 per repair</div>
+                <div class="divider"></div>
+                <a href="#" style="font-size:12.5px;">Export spend report (CSV)</a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  const btn = document.querySelector('.nav-item[data-screen="' + id + '"]');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => show(btn.dataset.screen));
+});
+// Role switcher — now also drives the screen
+document.querySelectorAll('.role-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.screen) show(btn.dataset.screen);
+  });
+});
+</script>
+
+</body>
+</html>

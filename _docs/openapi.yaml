@@ -1,0 +1,1872 @@
+openapi: 3.1.0
+info:
+  title: Gentick RMS API
+  version: 1.0.0
+  description: |
+    HTTP API for the Gentick Repair Management System.
+    Companion to the Markdown reference (`Gentick_RMS_API_Spec_v1.0.md`).
+    Built for Next.js API routes + PostgreSQL + Supabase Auth + n8n.
+  contact:
+    name: Gentick Electronics
+    email: repairs@gentick.co.za
+servers:
+  - url: https://rms.gentick.co.za/api/v1
+    description: Production
+  - url: https://staging-rms.gentick.co.za/api/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Local dev
+
+tags:
+  - name: Auth
+  - name: Customers
+  - name: Agents
+  - name: Consent
+  - name: Units
+  - name: Shipments
+  - name: Jobs
+  - name: Quotes
+  - name: Invoices
+  - name: SageExports
+  - name: Messages
+  - name: Parts
+  - name: Reference
+  - name: Reports
+  - name: Settings
+  - name: Templates
+  - name: Audit
+  - name: Dashboards
+  - name: Webhooks
+  - name: Files
+
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+
+paths:
+
+  # ===== Auth =====
+  /me:
+    get:
+      tags: [Auth]
+      summary: Current user profile
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MeResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/password-reset-request:
+    post:
+      tags: [Auth]
+      summary: Trigger Supabase password reset email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email } }
+      responses:
+        '204': { description: Always returned (no email enumeration) }
+
+  # ===== Main customers =====
+  /main-customers:
+    get:
+      tags: [Customers]
+      summary: List main customers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: include_deleted
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MainCustomer' }
+                  pagination: { $ref: '#/components/schemas/OffsetPagination' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Customers]
+      summary: Create main customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [corporation_name, customer_prefix]
+              properties:
+                corporation_name: { type: string, maxLength: 255 }
+                customer_prefix: { type: string, pattern: '^[A-Z0-9]{2,10}$' }
+                notes: { type: string, nullable: true }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MainCustomer' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /main-customers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Customers]
+      summary: Get main customer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/MainCustomer'
+                  - type: object
+                    properties:
+                      contacts:
+                        type: array
+                        items: { $ref: '#/components/schemas/MainCustomerContact' }
+                      agents_summary:
+                        type: object
+                        properties:
+                          total: { type: integer }
+                          active: { type: integer }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Customers]
+      summary: Update main customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                corporation_name: { type: string }
+                notes: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MainCustomer' }
+    delete:
+      tags: [Customers]
+      summary: Soft-delete main customer
+      responses:
+        '204': { description: Deleted }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ===== Agents =====
+  /agents:
+    get:
+      tags: [Agents]
+      summary: List agents
+      parameters:
+        - in: query
+          name: main_customer_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: q
+          schema: { type: string }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Agent' }
+                  pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+  /agents/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Agents]
+      summary: Get agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+    patch:
+      tags: [Agents]
+      summary: Update agent (limited self-edit fields)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agent_phone: { type: string }
+                address_line1: { type: string }
+                address_line2: { type: string, nullable: true }
+                city: { type: string }
+                province: { type: string }
+                postal_code: { type: string }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+
+  /agents/{id}/erase:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [Agents]
+      summary: POPIA right-to-erasure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Erased
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent_id: { type: string, format: uuid }
+                  erased_at: { type: string, format: date-time }
+                  audit_event_id: { type: string, format: uuid }
+
+  /main-customers/{id}/agents/invite:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [Agents]
+      summary: Issue agent invitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agent_name, agent_email]
+              properties:
+                agent_name: { type: string }
+                agent_email: { type: string, format: email }
+      responses:
+        '201':
+          description: Invitation issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentInvitation' }
+
+  /agents/accept-invitation:
+    post:
+      tags: [Agents]
+      summary: Agent completes invitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, supabase_user_id, agent_phone, address_line1, city, postal_code, consent_whatsapp]
+              properties:
+                token: { type: string }
+                supabase_user_id: { type: string, format: uuid }
+                agent_phone: { type: string }
+                address_line1: { type: string }
+                address_line2: { type: string, nullable: true }
+                city: { type: string }
+                province: { type: string }
+                postal_code: { type: string }
+                country: { type: string, default: 'South Africa' }
+                consent_whatsapp: { type: boolean }
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+
+  # ===== Units =====
+  /units:
+    get:
+      tags: [Units]
+      summary: List units
+      parameters:
+        - in: query
+          name: serial_number
+          schema: { type: string }
+        - in: query
+          name: agent_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: q
+          schema: { type: string }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Unit' }
+                  pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+  /units/{id}:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Units]
+      summary: Get unit with repair history
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Unit'
+                  - type: object
+                    properties:
+                      repair_history:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            job_id: { type: string, format: uuid }
+                            job_number: { type: string }
+                            stage: { $ref: '#/components/schemas/JobStage' }
+                            intake_at: { type: string, format: date-time }
+                            closed_at: { type: string, format: date-time, nullable: true }
+                            fault_reason_label: { type: string, nullable: true }
+
+  # ===== Shipments =====
+  /shipments:
+    post:
+      tags: [Shipments]
+      summary: Receive a shipment and create its jobs
+      description: |
+        The canonical intake action. Creates one shipment and one job per unit,
+        in a single transaction. Existing units (by serial_number) are linked;
+        new units are created.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ShipmentIntakeRequest' }
+            examples:
+              agentOrigin:
+                summary: Agent-initiated, 2 units
+                value:
+                  origin: agent
+                  originator_agent_id: 3e72a8c1-d4b1-4d3f-9f9e-7f8b0c2a1d8e
+                  tracking_number: AB12384
+                  received_at: 2026-05-31T11:05:00Z
+                  units:
+                    - serial_number: SN-21A847
+                      unit_type: 4Gee Telemetry Unit
+                      fault_description: Unit stopped sending readings on 26 May
+                      accessories: Power adapter, antenna
+                    - serial_number: SN-22F019
+                      unit_type: Soil Probe v2
+                      fault_description: Readings drifted; field recal failed
+                      accessories: Cable only
+      responses:
+        '201':
+          description: Intake complete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shipment_id: { type: string, format: uuid }
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        job_number: { type: string }
+                        current_stage: { $ref: '#/components/schemas/JobStage' }
+                  units_created: { type: integer }
+                  units_linked: { type: integer }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+    get:
+      tags: [Shipments]
+      summary: List shipments
+      parameters:
+        - in: query
+          name: origin
+          schema: { $ref: '#/components/schemas/ShipmentOrigin' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Shipment' }
+                  pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+  /shipments/{id}/discover-extra-units:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Shipments]
+      summary: Front-desk-only — register extra units found in a shipment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [units]
+              properties:
+                units:
+                  type: array
+                  items: { $ref: '#/components/schemas/IntakeUnit' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items: { $ref: '#/components/schemas/Job' }
+
+  # ===== Jobs =====
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: List jobs (cursor-paginated)
+      parameters:
+        - in: query
+          name: current_stage
+          description: Single stage or comma-separated list
+          schema: { type: string }
+        - in: query
+          name: main_customer_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: agent_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: assigned_technician_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: intake_from
+          schema: { type: string, format: date }
+        - in: query
+          name: intake_to
+          schema: { type: string, format: date }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: include_closed
+          schema: { type: boolean, default: false }
+        - in: query
+          name: sort
+          schema: { type: string, default: 'intake_at:desc' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/JobSummary' }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+
+  /jobs/{id}:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Jobs]
+      summary: Get job
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+    patch:
+      tags: [Jobs]
+      summary: Update job (limited fields — stage uses /transition)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assigned_technician_id: { type: string, format: uuid, nullable: true }
+                repair_type_id: { type: string, format: uuid }
+                accessories: { type: string }
+                fault_description: { type: string }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+
+  /jobs/{id}/transition:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Jobs]
+      summary: Transition the job to a new stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to_stage]
+              properties:
+                to_stage: { $ref: '#/components/schemas/JobStage' }
+                notes: { type: string }
+                fields:
+                  type: object
+                  description: Stage-specific extra fields
+                  properties:
+                    assigned_technician_id: { type: string, format: uuid }
+                    not_repairable_reason_id: { type: string, format: uuid }
+                    not_repairable_reason_other: { type: string }
+                    assessment_fee_waived: { type: boolean }
+                    assessment_fee_waiver_reason: { type: string }
+            examples:
+              toInProgress:
+                value:
+                  to_stage: in_progress
+                  notes: Parts arrived, resuming repair
+              toNotRepairable:
+                value:
+                  to_stage: not_repairable
+                  fields:
+                    not_repairable_reason_id: 5e72a8c1-d4b1-4d3f-9f9e-7f8b0c2a1d8e
+                    assessment_fee_waived: false
+      responses:
+        '200':
+          description: Transitioned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  current_stage: { $ref: '#/components/schemas/JobStage' }
+                  current_stage_changed_at: { type: string, format: date-time }
+                  side_effects:
+                    type: array
+                    items: { type: string }
+        '400':
+          description: Invalid stage transition
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /jobs/{id}/notes:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Jobs]
+      summary: List notes on a job
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/JobNote' }
+    post:
+      tags: [Jobs]
+      summary: Add a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+                visibility:
+                  type: string
+                  enum: [internal, customer]
+                  default: internal
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobNote' }
+
+  /jobs/{id}/photos:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Jobs]
+      summary: List photos on a job
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/JobPhoto' }
+    post:
+      tags: [Jobs]
+      summary: Upload a photo
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                caption: { type: string }
+                visibility:
+                  type: string
+                  enum: [internal, customer]
+      responses:
+        '201':
+          description: Uploaded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobPhoto' }
+        '413':
+          description: File too large
+
+  /jobs/{id}/parts:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Jobs]
+      summary: List parts consumed by a job
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/JobPart' }
+    post:
+      tags: [Jobs]
+      summary: Log a part used
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [part_id, quantity]
+              properties:
+                part_id: { type: string, format: uuid }
+                quantity: { type: string, pattern: '^[0-9]+(\.[0-9]{1,3})?$' }
+      responses:
+        '201':
+          description: Logged
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobPart' }
+
+  /jobs/{id}/status-history:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Jobs]
+      summary: Stage transition history
+      responses:
+        '200':
+          description: List, newest-first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/JobStatusHistory' }
+
+  /jobs/{id}/messages:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Messages]
+      summary: List messages on a job (cursor-paginated)
+      parameters:
+        - in: query
+          name: channel
+          schema: { $ref: '#/components/schemas/CommChannel' }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [inbound, outbound] }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Message' }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+
+  # ===== Quotes =====
+  /jobs/{id}/quotes:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Quotes]
+      summary: Create a draft quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuoteCreateRequest' }
+      responses:
+        '201':
+          description: Created (draft)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+
+  /quotes/{id}:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Quotes]
+      summary: Get quote
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+    patch:
+      tags: [Quotes]
+      summary: Update draft quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuoteCreateRequest' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+
+  /quotes/{id}/issue:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Quotes]
+      summary: Issue quote (captures snapshots; fires quote.ready webhook)
+      responses:
+        '200':
+          description: Issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+
+  /quotes/{id}/approve:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Quotes]
+      summary: Approve quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel:
+                  type: string
+                  enum: [whatsapp, email, portal]
+                source_message_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                notes:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quote_id: { type: string, format: uuid }
+                  status: { type: string, enum: [approved] }
+                  approval_id: { type: string, format: uuid }
+                  job_transitioned_to: { $ref: '#/components/schemas/JobStage' }
+        '400':
+          description: Quote expired or already decided
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /quotes/{id}/reject:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Quotes]
+      summary: Reject quote (no assessment fee per FR-QUO-09)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel:
+                  type: string
+                  enum: [whatsapp, email, portal]
+                notes:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quote_id: { type: string, format: uuid }
+                  status: { type: string, enum: [rejected] }
+
+  /quotes/{id}/supersede:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    post:
+      tags: [Quotes]
+      summary: Mark superseded and create next-version draft
+      responses:
+        '201':
+          description: New draft quote
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+
+  /quotes/{id}/pdf:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Quotes]
+      summary: Render quote PDF (always from snapshot)
+      responses:
+        '200':
+          description: PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  # ===== Invoices =====
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: List invoices
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [issued, exported_to_sage] }
+        - in: query
+          name: type
+          schema: { type: string, enum: [repair, assessment_fee] }
+        - in: query
+          name: issued_from
+          schema: { type: string, format: date }
+        - in: query
+          name: issued_to
+          schema: { type: string, format: date }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Invoice' }
+                  pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+  /invoices/{id}:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Invoices]
+      summary: Get invoice
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+
+  /invoices/{id}/pdf:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [Invoices]
+      summary: Render invoice PDF
+      responses:
+        '200':
+          description: PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  # ===== Sage exports =====
+  /sage-exports:
+    post:
+      tags: [SageExports]
+      summary: Generate Sage Pastel Online export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [format, invoice_ids]
+              properties:
+                format: { type: string, enum: [csv, xml] }
+                invoice_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Generated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SageExport' }
+    get:
+      tags: [SageExports]
+      summary: List exports
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/SageExport' }
+
+  /sage-exports/{id}/download:
+    parameters: [ { $ref: '#/components/parameters/IdPath' } ]
+    get:
+      tags: [SageExports]
+      summary: Download the export file
+      responses:
+        '200':
+          description: File
+          content:
+            text/csv: { schema: { type: string } }
+            application/xml: { schema: { type: string } }
+
+  # ===== Parts =====
+  /parts:
+    get:
+      tags: [Parts]
+      summary: List parts
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: active
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Part' }
+    post:
+      tags: [Parts]
+      summary: Create part
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, description, unit_cost, currency_code]
+              properties:
+                code: { type: string }
+                description: { type: string }
+                unit_cost: { type: string }
+                currency_code: { type: string, minLength: 3, maxLength: 3 }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Part' }
+
+  # ===== Reference =====
+  /repair-types:
+    get:
+      tags: [Reference]
+      summary: List repair types
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/RepairType' }
+
+  /fault-reasons:
+    get:
+      tags: [Reference]
+      summary: List fault reasons (for Not Repairable form)
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FaultReason' }
+
+  # ===== Reports =====
+  /reports/active-jobs:
+    get:
+      tags: [Reports]
+      summary: Active-jobs snapshot
+      parameters:
+        - in: query
+          name: as_of
+          schema: { type: string, format: date-time }
+        - in: query
+          name: main_customer_id
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  as_of: { type: string, format: date-time }
+                  total_active: { type: integer }
+                  by_stage:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        stage: { $ref: '#/components/schemas/JobStage' }
+                        count: { type: integer }
+                  aged_buckets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bucket: { type: string }
+                        count: { type: integer }
+
+  /reports/turnaround:
+    get:
+      tags: [Reports]
+      summary: Turnaround report
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, enum: [daily, weekly, monthly, quarterly], default: monthly }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Series
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    period: { type: string }
+                    avg_days: { type: number }
+                    p50_days: { type: number }
+                    p90_days: { type: number }
+                    count: { type: integer }
+
+  /reports/revenue:
+    get:
+      tags: [Reports]
+      summary: Revenue by period (per currency, no FX conversion)
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, enum: [daily, weekly, monthly, quarterly] }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Series
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    period: { type: string }
+                    currency_code: { type: string }
+                    total: { type: string }
+                    invoice_count: { type: integer }
+
+  /reports/common-faults:
+    get:
+      tags: [Reports]
+      summary: Common faults frequency
+      responses:
+        '200':
+          description: Counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    fault_code: { type: string }
+                    fault_label: { type: string }
+                    count: { type: integer }
+                    trend_months:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          month: { type: string }
+                          count: { type: integer }
+
+  # ===== Settings =====
+  /settings:
+    get:
+      tags: [Settings]
+      summary: All current settings
+      responses:
+        '200':
+          description: Settings map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { $ref: '#/components/schemas/Setting' }
+
+  /settings/{key}:
+    parameters:
+      - in: path
+        name: key
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Settings]
+      summary: Current value of a setting
+      responses:
+        '200':
+          description: Setting
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Setting' }
+    put:
+      tags: [Settings]
+      summary: Update a setting (creates a new version)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value: { description: Any JSON value }
+                change_reason: { type: string, nullable: true }
+      responses:
+        '200':
+          description: New version
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Setting' }
+
+  # ===== Webhooks (n8n inbound) =====
+  /webhooks/whatsapp/inbound:
+    post:
+      tags: [Webhooks]
+      summary: Record an inbound WhatsApp message (n8n only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [external_id, from_phone, received_at, body]
+              properties:
+                external_id: { type: string }
+                from_phone: { type: string }
+                received_at: { type: string, format: date-time }
+                body: { type: string }
+                context:
+                  type: object
+                  properties:
+                    in_reply_to_external_id: { type: string }
+      responses:
+        '200':
+          description: Recorded + classified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message_id: { type: string, format: uuid }
+                  classified_intent:
+                    type: string
+                    enum: [approval_yes, approval_no, question, other]
+                    nullable: true
+                  matched_quote_id: { type: string, format: uuid, nullable: true }
+                  action_taken: { type: string, nullable: true }
+                  escalated_to: { type: string, nullable: true }
+
+  /webhooks/whatsapp/delivery:
+    post:
+      tags: [Webhooks]
+      summary: Delivery / read receipt (n8n only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [external_id, status, occurred_at]
+              properties:
+                external_id: { type: string }
+                status: { type: string, enum: [delivered, read, failed] }
+                occurred_at: { type: string, format: date-time }
+                error: { type: string, nullable: true }
+      responses:
+        '204': { description: Recorded }
+
+# ===== Components =====
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT or RMS service account JWT (for n8n)
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: Supabase Auth browser cookie (set by @supabase/ssr)
+
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      in: query
+      name: cursor
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unauthorized:
+      description: Missing or invalid auth
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Authenticated but not permitted
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: Duplicate or concurrent edit
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    BusinessRuleViolation:
+      description: Allowed by schema, violates business logic
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - INVALID_STAGE_TRANSITION
+                - QUOTE_EXPIRED
+                - UNAUTHENTICATED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - GONE
+                - BUSINESS_RULE_VIOLATION
+                - RATE_LIMITED
+                - INTERNAL_ERROR
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  issue: { type: string }
+            request_id: { type: string }
+
+    OffsetPagination:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+
+    CursorPagination:
+      type: object
+      properties:
+        cursor: { type: string, nullable: true }
+        next_cursor: { type: string, nullable: true }
+        total: { type: integer, nullable: true }
+
+    MeResponse:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        role:
+          type: string
+          enum: [admin, technician, front_desk, main_customer_contact, agent, system]
+        rms_entity:
+          type: object
+          properties:
+            type: { type: string }
+            id: { type: string, format: uuid }
+        permissions:
+          type: object
+          properties:
+            can_approve_quotes: { type: boolean }
+            can_invite_agents: { type: boolean }
+            can_create_jobs: { type: boolean }
+            scopes:
+              type: array
+              items: { type: string }
+
+    MainCustomer:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customer_prefix: { type: string }
+        corporation_name: { type: string }
+        notes: { type: string, nullable: true }
+        deleted_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    MainCustomerContact:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        main_customer_id: { type: string, format: uuid }
+        contact_person: { type: string }
+        contact_email: { type: string, format: email }
+        contact_phone: { type: string, nullable: true }
+        is_primary: { type: boolean }
+        supabase_user_id: { type: string, format: uuid, nullable: true }
+
+    Agent:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        main_customer_id: { type: string, format: uuid }
+        agent_name: { type: string }
+        agent_email: { type: string, format: email }
+        agent_phone: { type: string, nullable: true }
+        address_line1: { type: string }
+        address_line2: { type: string, nullable: true }
+        city: { type: string }
+        province: { type: string, nullable: true }
+        postal_code: { type: string, nullable: true }
+        country: { type: string }
+        supabase_user_id: { type: string, format: uuid, nullable: true }
+        invited_at: { type: string, format: date-time, nullable: true }
+        invitation_accepted_at: { type: string, format: date-time, nullable: true }
+
+    AgentInvitation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        main_customer_id: { type: string, format: uuid }
+        agent_name: { type: string }
+        agent_email: { type: string, format: email }
+        expires_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+
+    Unit:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        serial_number: { type: string }
+        unit_type: { type: string }
+        current_agent_id: { type: string, format: uuid, nullable: true }
+        first_seen_at: { type: string, format: date-time }
+        last_seen_at: { type: string, format: date-time }
+        total_repair_count: { type: integer }
+        notes: { type: string, nullable: true }
+
+    IntakeUnit:
+      type: object
+      required: [serial_number, unit_type, fault_description]
+      properties:
+        serial_number: { type: string }
+        unit_type: { type: string }
+        fault_description: { type: string }
+        accessories: { type: string }
+        repair_type_id: { type: string, format: uuid }
+        intake_photo_ids:
+          type: array
+          items: { type: string, format: uuid }
+
+    ShipmentIntakeRequest:
+      type: object
+      required: [origin, units]
+      properties:
+        origin: { $ref: '#/components/schemas/ShipmentOrigin' }
+        originator_main_customer_id: { type: string, format: uuid }
+        originator_agent_id: { type: string, format: uuid }
+        tracking_number: { type: string }
+        received_at: { type: string, format: date-time }
+        notes: { type: string }
+        units:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/IntakeUnit' }
+
+    Shipment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        origin: { $ref: '#/components/schemas/ShipmentOrigin' }
+        tracking_number: { type: string, nullable: true }
+        received_at: { type: string, format: date-time }
+        received_by_staff_id: { type: string, format: uuid }
+        notes: { type: string, nullable: true }
+
+    ShipmentOrigin:
+      type: string
+      enum: [main_customer, agent, walk_in]
+
+    JobStage:
+      type: string
+      enum:
+        - received
+        - diagnosed
+        - quoted
+        - approved
+        - in_progress
+        - qc
+        - boxed
+        - ready_for_collection
+        - collected
+        - closed
+        - not_repairable
+        - rejected
+        - cancelled
+
+    CommChannel:
+      type: string
+      enum: [whatsapp, email]
+
+    JobSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_number: { type: string }
+        main_customer:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            corporation_name: { type: string }
+            customer_prefix: { type: string }
+        agent:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            agent_name: { type: string }
+        unit:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            serial_number: { type: string }
+            unit_type: { type: string }
+            total_repair_count: { type: integer }
+        current_stage: { $ref: '#/components/schemas/JobStage' }
+        current_stage_changed_at: { type: string, format: date-time }
+        assigned_technician:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, format: uuid }
+            full_name: { type: string }
+        intake_at: { type: string, format: date-time }
+        age_days: { type: integer }
+
+    Job:
+      allOf:
+        - $ref: '#/components/schemas/JobSummary'
+        - type: object
+          properties:
+            shipment_id: { type: string, format: uuid, nullable: true }
+            repair_type_id: { type: string, format: uuid }
+            originator_type: { type: string, enum: [main_customer, agent, front_desk] }
+            originator_id: { type: string, format: uuid }
+            fault_description: { type: string }
+            accessories: { type: string, nullable: true }
+            not_repairable_reason_id: { type: string, format: uuid, nullable: true }
+            not_repairable_reason_other: { type: string, nullable: true }
+            assessment_fee_amount: { type: string, nullable: true }
+            assessment_fee_currency: { type: string, nullable: true }
+            assessment_fee_waived: { type: boolean }
+            assessment_fee_waiver_reason: { type: string, nullable: true }
+            closed_at: { type: string, format: date-time, nullable: true }
+            deleted_at: { type: string, format: date-time, nullable: true }
+
+    JobStatusHistory:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        from_stage: { $ref: '#/components/schemas/JobStage' }
+        to_stage: { $ref: '#/components/schemas/JobStage' }
+        transition_at: { type: string, format: date-time }
+        transitioned_by_user_id: { type: string, format: uuid, nullable: true }
+        transitioned_by_actor_type:
+          type: string
+          enum: [staff, main_customer, agent, system]
+        notes: { type: string, nullable: true }
+
+    JobPhoto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        file_path: { type: string }
+        signed_url: { type: string }
+        original_filename: { type: string }
+        mime_type: { type: string }
+        file_size_bytes: { type: integer }
+        caption: { type: string, nullable: true }
+        visibility: { type: string, enum: [internal, customer] }
+        uploaded_at: { type: string, format: date-time }
+
+    JobNote:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        author_user_id: { type: string, format: uuid, nullable: true }
+        author_actor_type:
+          type: string
+          enum: [staff, main_customer, agent, system]
+        body: { type: string }
+        visibility: { type: string, enum: [internal, customer] }
+        created_at: { type: string, format: date-time }
+
+    JobPart:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        part_id: { type: string, format: uuid }
+        part:
+          $ref: '#/components/schemas/Part'
+        quantity: { type: string }
+        unit_cost_at_use: { type: string, description: Snapshot of cost at time of consumption }
+        currency_code: { type: string }
+        recorded_at: { type: string, format: date-time }
+
+    Part:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        description: { type: string }
+        unit_cost: { type: string }
+        currency_code: { type: string }
+        active: { type: boolean }
+
+    QuoteCreateRequest:
+      type: object
+      required: [currency_code, line_items]
+      properties:
+        currency_code: { type: string, minLength: 3, maxLength: 3 }
+        vat_rate: { type: string, default: '15.00' }
+        validity_days: { type: integer, default: 14 }
+        notes: { type: string, nullable: true }
+        line_items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [description, quantity, unit_price]
+            properties:
+              description: { type: string }
+              is_labour: { type: boolean, default: false }
+              part_id: { type: string, format: uuid, nullable: true }
+              quantity: { type: string }
+              unit_price: { type: string }
+
+    Quote:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        quote_number: { type: string }
+        version: { type: integer }
+        currency_code: { type: string }
+        subtotal: { type: string }
+        vat_rate: { type: string }
+        vat_amount: { type: string }
+        total: { type: string }
+        validity_days: { type: integer }
+        issued_at: { type: string, format: date-time, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        status:
+          type: string
+          enum: [draft, issued, approved, rejected, expired, superseded]
+        approval_authority:
+          type: string
+          enum: [main_customer, agent_threshold]
+        line_items:
+          type: array
+          items: { $ref: '#/components/schemas/QuoteLineItem' }
+        customer_snapshot: { type: object }
+        agent_snapshot: { type: object }
+        unit_snapshot: { type: object }
+        gentick_snapshot: { type: object }
+        notes: { type: string, nullable: true }
+
+    QuoteLineItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        line_number: { type: integer }
+        description: { type: string }
+        is_labour: { type: boolean }
+        part_id: { type: string, format: uuid, nullable: true }
+        quantity: { type: string }
+        unit_price: { type: string }
+        line_total: { type: string }
+
+    Invoice:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        invoice_number: { type: string }
+        type: { type: string, enum: [repair, assessment_fee] }
+        currency_code: { type: string }
+        subtotal: { type: string }
+        vat_rate: { type: string }
+        vat_amount: { type: string }
+        total: { type: string }
+        issued_at: { type: string, format: date-time }
+        status: { type: string, enum: [issued, exported_to_sage] }
+        sage_export_id: { type: string, format: uuid, nullable: true }
+        line_items:
+          type: array
+          items: { $ref: '#/components/schemas/InvoiceLineItem' }
+        customer_snapshot: { type: object }
+        agent_snapshot: { type: object }
+        gentick_snapshot: { type: object }
+
+    InvoiceLineItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        line_number: { type: integer }
+        description: { type: string }
+        quantity: { type: string }
+        unit_price: { type: string }
+        line_total: { type: string }
+
+    SageExport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        format: { type: string, enum: [csv, xml] }
+        filename: { type: string }
+        generated_at: { type: string, format: date-time }
+        invoice_count: { type: integer }
+        download_url: { type: string }
+
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        thread_id: { type: string, format: uuid }
+        direction: { type: string, enum: [inbound, outbound] }
+        channel: { $ref: '#/components/schemas/CommChannel' }
+        external_id: { type: string, nullable: true }
+        template:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            version: { type: integer }
+        body: { type: string }
+        sent_at: { type: string, format: date-time }
+        delivered_at: { type: string, format: date-time, nullable: true }
+        read_at: { type: string, format: date-time, nullable: true }
+        classified_intent:
+          type: string
+          enum: [approval_yes, approval_no, question, other]
+          nullable: true
+        error: { type: string, nullable: true }
+
+    RepairType:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        parent_id: { type: string, format: uuid, nullable: true }
+        active: { type: boolean }
+
+    FaultReason:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        label: { type: string }
+        active: { type: boolean }
+
+    Setting:
+      type: object
+      properties:
+        key: { type: string }
+        value: { description: Any JSON value }
+        version: { type: integer }
+        valid_from: { type: string, format: date-time }
+        valid_to: { type: string, format: date-time, nullable: true }
