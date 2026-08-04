@@ -1,0 +1,45 @@
+erDiagram
+    MAIN_CUSTOMERS ||--o{ MAIN_CUSTOMER_CONTACTS : "has"
+    MAIN_CUSTOMERS ||--o{ AGENTS : "has"
+    MAIN_CUSTOMERS ||--o{ AGENT_INVITATIONS : "issues"
+    MAIN_CUSTOMERS ||--o{ JOBS : "owns"
+
+    MAIN_CUSTOMER_CONTACTS ||--o{ CONSENT_RECORDS : "has"
+    AGENTS ||--o{ CONSENT_RECORDS : "has"
+
+    AGENTS ||--o{ UNITS : "owns"
+    AGENTS ||--o{ JOBS : "submits"
+
+    UNITS ||--o{ JOBS : "is repaired in"
+
+    SHIPMENTS ||--o{ JOBS : "groups"
+
+    JOBS ||--o{ JOB_STATUS_HISTORY : "logs"
+    JOBS ||--o{ JOB_PHOTOS : "has"
+    JOBS ||--o{ JOB_NOTES : "has"
+    JOBS ||--o{ JOB_PARTS : "consumes"
+    JOBS ||--o{ QUOTES : "is quoted by"
+    JOBS ||--o{ INVOICES : "is invoiced by"
+    JOBS ||--o{ MESSAGE_THREADS : "communicates via"
+    JOBS }o--|| REPAIR_TYPES : "categorised as"
+    JOBS }o--|| STAFF_USERS : "assigned to"
+    JOBS }o--|| FAULT_REASONS : "not repairable due to"
+
+    PART_CATALOG ||--o{ JOB_PARTS : "consumed via"
+    PART_CATALOG ||--o{ QUOTE_LINE_ITEMS : "priced for"
+
+    QUOTES ||--o{ QUOTE_LINE_ITEMS : "contains"
+    QUOTES ||--o{ QUOTE_APPROVALS : "decided by"
+
+    INVOICES ||--o{ INVOICE_LINE_ITEMS : "contains"
+    INVOICES }o--o{ SAGE_EXPORTS : "exported in"
+
+    MESSAGE_THREADS ||--o{ MESSAGES : "contains"
+    MESSAGE_TEMPLATES ||--o{ MESSAGES : "rendered from"
+
+    STAFF_USERS ||--o{ JOB_STATUS_HISTORY : "triggered"
+    STAFF_USERS ||--o{ AUDIT_EVENTS : "actor"
+
+    SETTINGS ||--o{ AUDIT_EVENTS : "changed"
+
+    WEBHOOK_EVENTS }o--|| JOBS : "fired for"
