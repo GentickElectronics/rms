@@ -214,6 +214,11 @@ No Supabase. No Drizzle. No direct Postgres connection.
 ### Frontend — `rms-frontend` (Runner)
 
 > ⚠️ **BUILD-UNVERIFIED:** All frontend gaps below are implemented and committed on `agentic`, but **none have been compiled**. No agent host (Windows, WSL) has Node.js, so `npm run build` / `tsc` has **not** been run on the Phase-4 frontend changes. **This is the gating blocker for Phase 5** — the frontend must build cleanly and be smoke-tested before cutover. Enable Node on a host (or run the Phase 5 Docker build) to verify.
+>
+> 🔎 **Peer review (Pegasus 2026-08-05):** Runner's frontend (commits `b40f117`+`b749802`) independently reviewed against backend contracts. Verdict: **6 gaps VERIFIED clean** (3b, 7/8, 12, 18, 21, 23), **2 NEEDS-FIX (9, 22)**, 0 regressions, build risk low. 3 action items:
+> 1. **Gap 9** — `api.get<Blob>` + `responseType:"blob"` in `useInvoices.ts:63` is a TS type risk; cast to `AxiosResponse<Blob>`.
+> 2. **Gap 22** — `useUnit()`/`useUnitHistory()` fire 2 API calls on every job page load even when history never renders; add loading/null handling or gate.
+> 3. **UX (7/8)** — `UserResetActions` (admin-only backend route) shown to `front_desk` on Agents/Customers → 403; wrap in admin guard.
 
 - [x] **3b. [CRITICAL]** Photos — switch portal/message `<img>` to signed URLs (or otherwise) so they don't 401 (no Bearer header on `<img>`). JobDetailPage + PortalJobDetailPage now render `photo.signed_url` from ListJobPhotos via `getPhotoUrl()` helper; also fixed staff img URL missing the `files/` segment. ✔ Runner 2026-08-05
 - [x] **9. [MAJOR]** Invoice PDF download broken — fix `useInvoicePdfUrl`, add `/api/v1` prefix, handle auth for `window.open` / download. Replaced with `downloadInvoicePdf()` (api client attaches Bearer + auto-refreshes, blob download from `content-disposition` filename). ✔ Runner 2026-08-05
