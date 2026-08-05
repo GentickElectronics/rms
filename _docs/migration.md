@@ -213,7 +213,7 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 ### Frontend — `rms-frontend` (Runner)
 
-> ⚠️ **BUILD-UNVERIFIED:** All frontend gaps below are implemented and committed on `agentic`, but **none have been compiled**. No agent host (Windows, WSL) has Node.js, so `npm run build` / `tsc` has **not** been run on the Phase-4 frontend changes. **This is the gating blocker for Phase 5** — the frontend must build cleanly and be smoke-tested before cutover. Enable Node on a host (or run the Phase 5 Docker build) to verify.
+> ✅ **BUILD-VERIFIED 2026-08-05 (Oda):** With Node.js now installed on the dev host, `npm install` + `npm run build` (`tsc -b && vite build`) **passes cleanly** on the full Phase-4 tree (all Runner WIP + Fluffy report/pre-registration UI + Pegasus email-verification pages). Produces `dist/` (index.js 753 kB / 213 kB gzip). Only a non-fatal chunk-size warning. `package-lock.json` committed (`5288e24`) so Phase-5 `npm ci` is reproducible; `*.tsbuildinfo` gitignored. The "build-UNVERIFIED" blocker is now **resolved** — remaining before cutover is a runtime smoke test (Phase 5).
 >
 > 🔎 **Peer review (Pegasus 2026-08-05):** Runner's frontend (commits `b40f117`+`b749802`) independently reviewed against backend contracts. Verdict: **6 gaps VERIFIED clean** (3b, 7/8, 12, 18, 21, 23), **2 NEEDS-FIX (9, 22)**, 0 regressions, build risk low. 3 action items:
 > 1. **Gap 9** — `api.get<Blob>` + `responseType:"blob"` in `useInvoices.ts` TS type risk → **fixed** (`AxiosResponse<Blob>` cast, `e078d72`).
