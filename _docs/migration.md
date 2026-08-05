@@ -5,9 +5,9 @@
 | Phase | Status |
 |---|---|
 | Phase 1 — Go Backend | ✅ Complete (2026-08-04) |
-| Phase 2 — Frontend | ⬜ Pending |
-| Phase 3 — Review | ⬜ Pending |
-| Phase 4 — Deploy & Test | ⬜ Pending |
+| Phase 2 — Frontend | ✅ Complete (2026-08-05, `rms-frontend` agentic @ 6ef0f9a) |
+| Phase 3 — Review | ✅ Complete (2026-08-05) — gaps logged below |
+| Phase 4 — Deploy & Test | In progress — IMAGES ON GHCR (rms-api + rms-frontend @ 0.0.0) |
 
 ## Goal
 
@@ -153,7 +153,37 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 ### Gaps found
 
-*(Populated during review)*
+*Compiled 2026-08-05 from Phase 3 review (Pegasus — critical flows, Fluffy + Runner — simple parity). Severity in brackets. Deduplicated across reviewers; source in parens.*
+
+### CRITICAL (deploy-blockers — must be resolved before cutover)
+1. **[CRITICAL] n8n outbound dispatch missing entirely from Go API** (Pegasus). Old `lib/webhooks/dispatch.ts` + `sign.ts` POSTed HMAC-signed `webhook_events` envelopes to `N8N_WEBHOOK_URL` on transitions/quote/notification events. New `TransitionJob` records history but never dispatches. After cutover n8n gets ZERO outbound events → no stage-change/quote/notification dispatches.
+2. **[CRITICAL] Audit log has no writer** (Fluffy). Go API reads `audit_events` (viewer works: `GET /api/v1/admin/audit`) but nothing INSERTs. Old `lib/audit/audit.ts` `recordAudit()` calls (settings/account-security/quote flow) not ported. Table not even created in Go migrations.
+3. **[CRITICAL] File visibility not enforced server-side + photo `<img>` auth broken** (Fluffy, Runner). `GET /api/v1/files/{key}` and `GET /jobs/{id}/photos` apply no customer-vs-internal scoping (old used public HMAC-signed expiring URLs). `ServeFile` requires a Bearer header, but photos are rendered via `<img src>` (no header) → **portal photos return 401**. No signed-URL support; old emailed/WhatsApp links break.
+
+### MAJOR (functional/security gaps)
+4. **[MAJOR] Server-side RBAC not enforced on many admin/agent/customer endpoints** (Pegasus). `POST /admin/settings/{key}`, `POST /agents/invite`, agent/customer CRUD are `RequireAuth` only — frontend RoleGuard is the only gate. Direct API calls bypass. `InviteAgent` also lacks the old admin/front_desk/customer_contact check.
+5. **[MAJOR] `CreateQuote`/`IssueQuote` have no authorization** (Pegasus). Only `RequireAuth`; a technician could issue a quote via direct API.
+6. **[MAJOR] WhatsApp `classifyIntent` uses prefix match, not regex word-boundary** (Pegasus). "I don't know when it broke" classified "other" instead of "question" → missed follow-ups. `from_phone` E.164 validation also loosened.
+7. **[MAJOR] Customer contact update/delete missing** (Runner). Only `GET/POST /customers/{id}/contacts`; old `updateContactAction`/`deleteContactAction` have no backend/frontend equivalent.
+8. **[MAJOR] Customer contact missing update/delete**, admin-initiated password reset missing (Runner). Old `adminSetPasswordAction`/`adminSendResetEmailAction` have no endpoint.
+9. **[MAJOR] Invoice PDF download broken in frontend** (Runner). `useInvoicePdfUrl` misuse (destructured as object), missing `/api/v1` prefix, `window.open` can't attach Bearer → always 401.
+10. **[MAJOR] Report type regression** (Runner). Old CSV exports (aging / intake-source / technician-workload / revenue) not covered; only a flat all-jobs CSV remains.
+
+### MINOR
+11. MFA + email verification removed (Pegasus/Fluffy/Runner) — verify with Teo whether intentionally dropped.
+12. Account/security page is a stub (`/profile`); admin password reset UI missing (Fluffy).
+13. `GetJob` returns any job by UUID to any authenticated user (no role scoping) (Runner).
+14. Photo key format drift: old `jobs/{id}/{file}` vs new `{id}/{uuid}_name` (Runner).
+15. Sage export route changed: old `GET /jobs/{id}/sage-export` → `POST /invoices/sage-export`; `exported_to_sage` semantics not replicated (Runner).
+16. Pre-registration flow simplified — staff-side pending queue + intake-from-pending gone (Runner).
+17. No invoice auto-generation on quote approval; Sage XML unimplemented (CSV works) (Pegasus).
+18. Frontend `RoleGuard` excludes customer contacts from quote page despite API supporting it (Pegasus).
+19. WhatsApp `from_phone` E.164 validation dropped (Pegasus).
+20. Agent pre-registration sends `originator_type`/`originator_id` the API silently overrides (Pegasus).
+21. `/auth/me` shape mismatch: API returns `user_id`, frontend type expects `id` (Runner).
+22. `GET /units/{id}/history` has no frontend consumer (serial-history feature unwired) (Runner).
+23. `/portal/intake` has no dedicated route — only a dialog in AgentPortal (Fluffy).
+24. Out of scope by design: Supabase OAuth `/auth/callback` removed (intentional).
 
 ---
 
@@ -163,7 +193,7 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 - [ ] Add `rms-frontend` to compose.yml
 - [ ] Nginx: `/api/*` → rms-api, `/*` → rms-frontend
-- [ ] Dockerfile for rms-frontend
+- [x] Dockerfile for rms-frontend (multi-stage node→nginx, commit 3679a23) — image on ghcr
 - [ ] CI: add rms-frontend to img-build.sh flow
 - [ ] DB migration run on staging
 - [ ] Integration test: full user flows
@@ -174,6 +204,19 @@ No Supabase. No Drizzle. No direct Postgres connection.
 - [ ] Archive rms-app (keep repo, remove from compose)
 - [ ] Drop `supabase_user_id` columns
 - [ ] Remove Supabase env vars
+
+## Phase 4 — Image build status (Oda, 2026-08-05)
+
+Both app images built multi-arch (linux/amd64 + linux/arm64) via the `img-build.sh` flow (docker buildx build --platform linux/amd64,linux/arm64 --push) and pushed to GHCR at version `0.0.0` (VERSION untouched):
+
+| Image | GHCR ref | Digest |
+|---|---|---|
+| rms-api | `ghcr.io/gentickelectronics/rms-api:0.0.0` | `sha256:2436b7b7…` |
+| rms-frontend | `ghcr.io/gentickelectronics/rms-frontend:0.0.0` | `sha256:2788a238…` |
+
+Notes:
+- `img-build.sh` is interactive (readline `read -e`); driving it non-interactively yields an empty tag, so its exact buildx command was run directly per image. Script + flow otherwise unchanged.
+- First-ever compile of rms-frontend happened here — surfaced then fixed all TypeScript build errors (commits 38c3338, 11008d2). Confirms the SPA now builds cleanly.
 
 ---
 
