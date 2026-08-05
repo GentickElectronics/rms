@@ -7,7 +7,8 @@
 | Phase 1 — Go Backend | ✅ Complete (2026-08-04) |
 | Phase 2 — Frontend | ✅ Complete (2026-08-05, `rms-frontend` agentic @ 6ef0f9a) |
 | Phase 3 — Review | ✅ Complete (2026-08-05) — gaps logged below |
-| Phase 4 — Deploy & Test | In progress — IMAGES ON GHCR (rms-api + rms-frontend @ 0.0.0) |
+| Phase 4 — Addressing Review results | In progress |
+| Phase 5 — Deploy & Test | Not started — IMAGES ON GHCR (rms-api + rms-frontend @ 0.0.0) |
 
 ## Goal
 
@@ -33,7 +34,7 @@ rms (umbrella)
 ├── rms-api/          ← Go backend (new)
 ├── rms-frontend/     ← React SPA (new)
 ├── rms-infra/        ← compose, nginx, n8n (updated)
-├── rms-app/          ← DELETED after Phase 4
+├── rms-app/          ← DELETED after Phase 5
 └── _docs/
 ```
 
@@ -187,7 +188,52 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 ---
 
-## Phase 4 — Deploy & Test
+## Phase 4 — Addressing Review results
+
+**Deliverable:** Resolve every actionable gap from Phase 3 before Deploy & Test. All gaps tracked below; each is assigned to a worker agent. Items marked **DECISION** are not implementation tasks — they need Teo.
+
+### Backend — `rms-api` (Pegasus)
+
+- [ ] **1. [CRITICAL]** n8n outbound dispatch missing entirely — port old `lib/webhooks/dispatch.ts` + `sign.ts` HMAC-signed `webhook_events` envelopes to `N8N_WEBHOOK_URL` on transition / quote / notification events.
+- [ ] **2. [CRITICAL]** Audit log has no writer — port `recordAudit()` writes; create the table in a new Go migration (e.g. 005).
+- [ ] **3a. [CRITICAL]** File visibility — enforce customer-vs-internal scoping on `GET /api/v1/files/{key}` and `GET /jobs/{id}/photos` server-side; support public HMAC-signed expiring URLs (so emails/WhatsApp/`<img>` links work without a Bearer header).
+- [ ] **4. [MAJOR]** Server-side RBAC on admin/agent/customer endpoints currently `RequireAuth`-only; add role checks (admin / front_desk / customer_contact as in old flows) to `POST /admin/settings/{key}`, `POST /agents/invite`, agent/customer CRUD, etc.
+- [ ] **5. [MAJOR]** `CreateQuote` / `IssueQuote` authorization — must not be issuable by a technician via direct API.
+- [ ] **6. [MAJOR]** WhatsApp `classifyIntent` — regex word-boundary matching, not prefix; restore strict E.164 `from_phone` validation.
+- [ ] **13. [MINOR]** `GetJob` — restrict UUID access by role (customer/agent scoping).
+- [ ] **14. [MINOR]** Photo key format drift — reconcile old `jobs/{id}/{file}` vs new `{id}/{uuid}_name`.
+- [ ] **15. [MINOR]** Sage export semantics — reconcile old `GET /jobs/{id}/sage-export` vs new `POST /invoices/sage-export`; replicate `exported_to_sage`.
+- [ ] **17. [MINOR]** Invoice auto-generation on quote approval; Sage XML export (CSV already works).
+- [ ] **20. [MINOR]** Agent pre-registration — stop silently overriding `originator_type` / `originator_id`.
+
+### Full-stack — customer/agent contacts (Runner)
+
+- [ ] **7. [MAJOR]** Customer contact **update/delete** — backend endpoint + frontend UI (only GET/POST `/customers/{id}/contacts` exists).
+- [ ] **8. [MAJOR]** Customer contact update/delete + admin-initiated password reset (`adminSetPasswordAction` / `adminSendResetEmailAction`) — add API + UI.
+
+### Frontend — `rms-frontend` (Runner)
+
+- [ ] **3b. [CRITICAL]** Photos — switch portal/message `<img>` to signed URLs (or otherwise) so they don't 401 (no Bearer header on `<img>`).
+- [ ] **9. [MAJOR]** Invoice PDF download broken — fix `useInvoicePdfUrl`, add `/api/v1` prefix, handle auth for `window.open` / download.
+- [ ] **12. [MINOR]** Account/security page (`/profile`) is a stub; add admin password reset UI.
+- [ ] **18. [MINOR]** `RoleGuard` excludes customer contacts from quote page although API supports it.
+- [ ] **21. [MINOR]** `/auth/me` shape mismatch — API returns `user_id`, frontend type expects `id`.
+- [ ] **22. [MINOR]** `GET /units/{id}/history` unwired — serialize-history feature has no frontend consumer.
+- [ ] **23. [MINOR]** `/portal/intake` needs a dedicated route (currently only a dialog in AgentPortal).
+
+### Flows — reporting + pre-registration (Fluffy)
+
+- [ ] **10. [MAJOR]** Report type regression — restore CSV exports: aging / intake-source / technician-workload / revenue (only a flat all-jobs CSV remains).
+- [ ] **16. [MINOR]** Pre-registration flow — restore staff-side pending queue + intake-from-pending.
+
+### Decision needed (Teo)
+
+- [ ] **11. [DECISION]** MFA + email verification removed — confirm whether intentionally dropped.
+- [ ] **24. [INTENTIONAL]** Supabase OAuth `/auth/callback` removed by design — no action.
+
+---
+
+## Phase 5 — Deploy & Test
 
 **Deliverable:** Full stack (Go + React) running in compose. rms-app shut down.
 
@@ -205,7 +251,7 @@ No Supabase. No Drizzle. No direct Postgres connection.
 - [ ] Drop `supabase_user_id` columns
 - [ ] Remove Supabase env vars
 
-## Phase 4 — Image build status (Oda, 2026-08-05)
+## Phase 5 — Image build status (Oda, 2026-08-05)
 
 Both app images built multi-arch (linux/amd64 + linux/arm64) via the `img-build.sh` flow (docker buildx build --platform linux/amd64,linux/arm64 --push) and pushed to GHCR at version `0.0.0` (VERSION untouched):
 
