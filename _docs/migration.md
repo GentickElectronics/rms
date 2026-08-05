@@ -270,9 +270,22 @@ No Supabase. No Drizzle. No direct Postgres connection.
   - Agent invitation → accept → login → view jobs
   - Admin: staff CRUD, settings, audit log
 - [ ] Smoke test all screens
+- [x] Seed first admin user — `docker compose exec rms-api /app seed --email=... --name=... --password=...` (CLI subcommand, zero network surface)
 - [ ] Archive rms-app (keep repo, remove from compose)
 - [ ] Drop `supabase_user_id` columns
 - [ ] Remove Supabase env vars
+
+### Admin seeding
+
+No public signup — the first admin must be seeded directly via the CLI:
+
+```bash
+docker compose exec rms-api /app seed --email=ADMIN@example.com --name="Full Name" --password=...
+```
+
+This is a subcommand of the API binary (not an HTTP endpoint). It connects to the
+database, bcrypt-hashes the password, and inserts a row into `staff_users` with
+`role=admin`, `active=true`, `email_verified=true`. Zero network exposure.
 
 ## Phase 5 — Image build status (Oda, 2026-08-05)
 
