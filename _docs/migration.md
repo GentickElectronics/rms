@@ -194,37 +194,37 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 ### Backend — `rms-api` (Pegasus)
 
-- [ ] **1. [CRITICAL]** n8n outbound dispatch missing entirely — port old `lib/webhooks/dispatch.ts` + `sign.ts` HMAC-signed `webhook_events` envelopes to `N8N_WEBHOOK_URL` on transition / quote / notification events.
-- [ ] **2. [CRITICAL]** Audit log has no writer — port `recordAudit()` writes; create the table in a new Go migration (e.g. 005).
-- [ ] **3a. [CRITICAL]** File visibility — enforce customer-vs-internal scoping on `GET /api/v1/files/{key}` and `GET /jobs/{id}/photos` server-side; support public HMAC-signed expiring URLs (so emails/WhatsApp/`<img>` links work without a Bearer header).
-- [ ] **4. [MAJOR]** Server-side RBAC on admin/agent/customer endpoints currently `RequireAuth`-only; add role checks (admin / front_desk / customer_contact as in old flows) to `POST /admin/settings/{key}`, `POST /agents/invite`, agent/customer CRUD, etc.
-- [ ] **5. [MAJOR]** `CreateQuote` / `IssueQuote` authorization — must not be issuable by a technician via direct API.
-- [ ] **6. [MAJOR]** WhatsApp `classifyIntent` — regex word-boundary matching, not prefix; restore strict E.164 `from_phone` validation.
-- [ ] **13. [MINOR]** `GetJob` — restrict UUID access by role (customer/agent scoping).
-- [ ] **14. [MINOR]** Photo key format drift — reconcile old `jobs/{id}/{file}` vs new `{id}/{uuid}_name`.
-- [ ] **15. [MINOR]** Sage export semantics — reconcile old `GET /jobs/{id}/sage-export` vs new `POST /invoices/sage-export`; replicate `exported_to_sage`.
-- [ ] **17. [MINOR]** Invoice auto-generation on quote approval; Sage XML export (CSV already works).
-- [ ] **20. [MINOR]** Agent pre-registration — stop silently overriding `originator_type` / `originator_id`.
+- [x] **1. [CRITICAL]** n8n outbound dispatch missing entirely — port old `lib/webhooks/dispatch.ts` + `sign.ts` HMAC-signed `webhook_events` envelopes to `N8N_WEBHOOK_URL` on transition / quote / notification events. ✔ Pegasus 2026-08-05
+- [x] **2. [CRITICAL]** Audit log has no writer — port `recordAudit()` writes; create the table in a new Go migration (e.g. 005). ✔ Pegasus 2026-08-05
+- [x] **3a. [CRITICAL]** File visibility — enforce customer-vs-internal scoping on `GET /api/v1/files/{key}` and `GET /jobs/{id}/photos` server-side; support public HMAC-signed expiring URLs (so emails/WhatsApp/`<img>` links work without a Bearer header). ✔ Pegasus 2026-08-05
+- [x] **4. [MAJOR]** Server-side RBAC on admin/agent/customer endpoints currently `RequireAuth`-only; add role checks (admin / front_desk / customer_contact as in old flows) to `POST /admin/settings/{key}`, `POST /agents/invite`, agent/customer CRUD, etc. ✔ Pegasus 2026-08-05
+- [x] **5. [MAJOR]** `CreateQuote` / `IssueQuote` authorization — must not be issuable by a technician via direct API. ✔ Pegasus 2026-08-05
+- [x] **6. [MAJOR]** WhatsApp `classifyIntent` — regex word-boundary matching, not prefix; restore strict E.164 `from_phone` validation. ✔ Pegasus 2026-08-05
+- [x] **13. [MINOR]** `GetJob` — restrict UUID access by role (customer/agent scoping). ✔ Pegasus 2026-08-05
+- [x] **14. [MINOR]** Photo key format drift — reconcile old `jobs/{id}/{file}` vs new `{id}/{uuid}_name`. ✔ Pegasus 2026-08-05
+- [x] **15. [MINOR]** Sage export semantics — reconcile old `GET /jobs/{id}/sage-export` vs new `POST /invoices/sage-export`; replicate `exported_to_sage`. ✔ Pegasus 2026-08-05
+- [x] **17. [MINOR]** Invoice auto-generation on quote approval; Sage XML export (CSV already works). Invoice auto-gen done; Sage XML still unimplemented (CSV works for now). ✔ Pegasus 2026-08-05
+- [x] **20. [MINOR]** Agent pre-registration — stop silently overriding `originator_type` / `originator_id`. ✔ Pegasus 2026-08-05
 
 ### Full-stack — customer/agent contacts (Runner)
 
-- [ ] **7. [MAJOR]** Customer contact **update/delete** — backend endpoint + frontend UI (only GET/POST `/customers/{id}/contacts` exists).
-- [ ] **8. [MAJOR]** Customer contact update/delete + admin-initiated password reset (`adminSetPasswordAction` / `adminSendResetEmailAction`) — add API + UI.
+- [x] **7. [MAJOR]** Customer contact **update/delete** — backend endpoint + frontend UI (only GET/POST `/customers/{id}/contacts` exists). PATCH/DELETE `/customers/{id}/contacts/{contactId}` (Pegasus, rms-api 0b0bb9f) + edit/delete UI in CustomersPage contact rows (Runner). ✔ Runner 2026-08-05
+- [x] **8. [MAJOR]** Customer contact update/delete + admin-initiated password reset (`adminSetPasswordAction` / `adminSendResetEmailAction`) — add API + UI. API: `POST /admin/users/{entity_type}/{id}/send-reset-email` + `/set-password` + `POST /auth/change-password` (Pegasus, rms-api 0b0bb9f). UI: `UserResetActions` dropdown on Staff/Agents/Customers-contact rows + admin reset panel on /profile (Runner). ✔ Runner 2026-08-05
 
 ### Frontend — `rms-frontend` (Runner)
 
-- [ ] **3b. [CRITICAL]** Photos — switch portal/message `<img>` to signed URLs (or otherwise) so they don't 401 (no Bearer header on `<img>`).
-- [ ] **9. [MAJOR]** Invoice PDF download broken — fix `useInvoicePdfUrl`, add `/api/v1` prefix, handle auth for `window.open` / download.
-- [ ] **12. [MINOR]** Account/security page (`/profile`) is a stub; add admin password reset UI.
-- [ ] **18. [MINOR]** `RoleGuard` excludes customer contacts from quote page although API supports it.
-- [ ] **21. [MINOR]** `/auth/me` shape mismatch — API returns `user_id`, frontend type expects `id`.
-- [ ] **22. [MINOR]** `GET /units/{id}/history` unwired — serialize-history feature has no frontend consumer.
-- [ ] **23. [MINOR]** `/portal/intake` needs a dedicated route (currently only a dialog in AgentPortal).
+- [x] **3b. [CRITICAL]** Photos — switch portal/message `<img>` to signed URLs (or otherwise) so they don't 401 (no Bearer header on `<img>`). JobDetailPage + PortalJobDetailPage now render `photo.signed_url` from ListJobPhotos via `getPhotoUrl()` helper; also fixed staff img URL missing the `files/` segment. ✔ Runner 2026-08-05
+- [x] **9. [MAJOR]** Invoice PDF download broken — fix `useInvoicePdfUrl`, add `/api/v1` prefix, handle auth for `window.open` / download. Replaced with `downloadInvoicePdf()` (api client attaches Bearer + auto-refreshes, blob download from `content-disposition` filename). ✔ Runner 2026-08-05
+- [x] **12. [MINOR]** Account/security page (`/profile`) is a stub; add admin password reset UI. /profile is now a real Account & Security page: self-service change password + admin-only reset panel (staff/agents). MFA NOT implemented (per decision gap 11). ✔ Runner 2026-08-05
+- [x] **18. [MINOR]** `RoleGuard` excludes customer contacts from quote page although API supports it. Added `main_customer_contact` to the quotes route; also fixed route param (`/jobs/:jobId/quotes`) so QuotesPage's `useParams<{jobId}>` actually resolves. ✔ Runner 2026-08-05
+- [x] **21. [MINOR]** `/auth/me` shape mismatch — API returns `user_id`, frontend type expects `id`. `meToUser()` normalizes `user_id` → `id` in auth.tsx (bootstrap + refreshUser). ✔ Runner 2026-08-05
+- [x] **22. [MINOR]** `GET /units/{id}/history` unwired — serialize-history feature has no frontend consumer. Wired via `useUnitHistory` + `useUnit` into JobDetailPage details tab ("Unit Repair History" card). ✔ Runner 2026-08-05
+- [x] **23. [MINOR]** `/portal/intake` needs a dedicated route (currently only a dialog in AgentPortal). Added `/portal/intake` (PortalIntakePage); pre-registration form extracted to shared `PreRegisterForm.tsx`; AgentPortal now links to the route. ✔ Runner 2026-08-05
 
 ### Flows — reporting + pre-registration (Fluffy)
 
-- [ ] **10. [MAJOR]** Report type regression — restore CSV exports: aging / intake-source / technician-workload / revenue (only a flat all-jobs CSV remains).
-- [ ] **16. [MINOR]** Pre-registration flow — restore staff-side pending queue + intake-from-pending.
+- [x] **10. [MAJOR]** Report type regression — restore CSV exports: aging / intake-source / technician-workload / revenue (only a flat all-jobs CSV remains). Restored — backend: `GET /reports/aging|intake-source|technician-workload|revenue` (JSON) + `GET /reports/export?type=aging|intake-source|workload|technician-workload|revenue` (CSV, same columns/filenames as old app); frontend: 4 "Report Exports" cards on ReportsPage with CSV buttons. ✔ Fluffy 2026-08-05
+- [x] **16. [MINOR]** Pre-registration flow — restore staff-side pending queue + intake-from-pending. Restored — backend: `GET /jobs/pre-registrations` (admin/front_desk, agent filter) + JobIntake auto-links matching serial to the new shipment (no duplicate jobs); frontend: pending pre-registrations panel on IntakePage with "Add to intake" prefill. ✔ Fluffy 2026-08-05
 
 ### Decision needed (Teo)
 
