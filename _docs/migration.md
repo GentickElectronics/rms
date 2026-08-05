@@ -203,7 +203,7 @@ No Supabase. No Drizzle. No direct Postgres connection.
 - [x] **13. [MINOR]** `GetJob` — restrict UUID access by role (customer/agent scoping). ✔ Pegasus 2026-08-05
 - [x] **14. [MINOR]** Photo key format drift — reconcile old `jobs/{id}/{file}` vs new `{id}/{uuid}_name`. ✔ Pegasus 2026-08-05
 - [x] **15. [MINOR]** Sage export semantics — reconcile old `GET /jobs/{id}/sage-export` vs new `POST /invoices/sage-export`; replicate `exported_to_sage`. ✔ Pegasus 2026-08-05
-- [x] **17. [MINOR]** Invoice auto-generation on quote approval; Sage XML export (CSV already works). Invoice auto-gen done; Sage XML still unimplemented (CSV works for now). ✔ Pegasus 2026-08-05
+- [x] **17. [MINOR]** Invoice auto-generation on quote approval; Sage XML export (CSV already works). Invoice auto-gen done; **Sage XML still unimplemented** (CSV works for now) — carried into Phase 5. ✔ Pegasus 2026-08-05 (auto-gen) / ⚠️ Sage XML open
 - [x] **20. [MINOR]** Agent pre-registration — stop silently overriding `originator_type` / `originator_id`. ✔ Pegasus 2026-08-05
 
 ### Full-stack — customer/agent contacts (Runner)
@@ -212,6 +212,8 @@ No Supabase. No Drizzle. No direct Postgres connection.
 - [x] **8. [MAJOR]** Customer contact update/delete + admin-initiated password reset (`adminSetPasswordAction` / `adminSendResetEmailAction`) — add API + UI. API: `POST /admin/users/{entity_type}/{id}/send-reset-email` + `/set-password` + `POST /auth/change-password` (Pegasus, rms-api 0b0bb9f). UI: `UserResetActions` dropdown on Staff/Agents/Customers-contact rows + admin reset panel on /profile (Runner). ✔ Runner 2026-08-05
 
 ### Frontend — `rms-frontend` (Runner)
+
+> ⚠️ **BUILD-UNVERIFIED:** All frontend gaps below are implemented and committed on `agentic`, but **none have been compiled**. No agent host (Windows, WSL) has Node.js, so `npm run build` / `tsc` has **not** been run on the Phase-4 frontend changes. **This is the gating blocker for Phase 5** — the frontend must build cleanly and be smoke-tested before cutover. Enable Node on a host (or run the Phase 5 Docker build) to verify.
 
 - [x] **3b. [CRITICAL]** Photos — switch portal/message `<img>` to signed URLs (or otherwise) so they don't 401 (no Bearer header on `<img>`). JobDetailPage + PortalJobDetailPage now render `photo.signed_url` from ListJobPhotos via `getPhotoUrl()` helper; also fixed staff img URL missing the `files/` segment. ✔ Runner 2026-08-05
 - [x] **9. [MAJOR]** Invoice PDF download broken — fix `useInvoicePdfUrl`, add `/api/v1` prefix, handle auth for `window.open` / download. Replaced with `downloadInvoicePdf()` (api client attaches Bearer + auto-refreshes, blob download from `content-disposition` filename). ✔ Runner 2026-08-05
