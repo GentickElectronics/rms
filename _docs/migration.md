@@ -244,14 +244,14 @@ No Supabase. No Drizzle. No direct Postgres connection.
 
 **Context:** Teo confirmed email verification is REQUIRED (gap 11). The Go API already has an SMTP sender (`internal/email`) and password-reset flow; it has NO email-verification flow (accounts can't be verified, blocking account creation and password restore).
 
-- [ ] **11e. [REQUIRED]** Email verification — design + implement:
+- [x] **11e. [REQUIRED]** Email verification — design + implement:
   - `email_verified` state on the user (migration `006`), plus a verification token/expiry column.
   - Verification token issuance + emailed link on account creation/invitation (and optionally on request).
   - A public verification URL/endpoint (no Bearer) that marks the email verified.
   - Decide + enforce policy: gate login and/or password-reset until the email is verified (mirror the old app's `verifyEmail`/no-email-verified behavior — Pegasus should check rms-app's old flow as reference).
   - Webhook/audit hooks consistent with gaps 1 & 2 (n8n dispatch, audit write).
   - Frontend: a "please verify your email" state + verify link handler page/route where needed.
-  - Keep it consistent with existing auth flows (invitation acceptance, admin password reset, /auth/me shape). Do NOT implement MFA (Teo hasn't requested it).
+  - Keep it consistent with existing auth flows (invitation acceptance, admin password reset, /auth/me shape). Do NOT implement MFA (Teo hasn't requested it). ✔ Pegasus 2026-08-05
 - [ ] **11. (MFA)** — only if Teo later confirms. Default: remain removed.
 
 ---
