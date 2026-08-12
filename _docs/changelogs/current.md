@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+> **Versioning reset.** `_docs/VERSION` is `0.0.0-staging` and every git tag
+> has been deleted, locally and on origin. Nothing here has been released, so
+> the former `v0.0.0.md` archive is folded back in below. The first release
+> will be v0.0.0, cut from this file.
+
 ### rms-api
 
 #### Added
@@ -38,3 +43,16 @@
   - `SageExport` handler generates `filename`/`file_path` automatically
     (format: `sage-export-YYYYMMDD-HHMMSS.csv`).
   - `ListSageExports` SELECT/Scan updated for new column set.
+
+## Earlier work — was `v0.0.0.md`
+
+Folded in when versioning was reset. Never released under a tag that still exists.
+
+### Added
+- `_docs/migration_diffs.md` — structural mapping from RepairManagementSystem → rms.
+- `_docs/migrate_plan.md` — deployment plan for gentick-infra integration.
+- `rms-app` and `rms-infra` registered as git submodules with `.gitmodules`.
+
+### Changed
+- Repo renamed from RepairManagementSystem to rms.
+- Architecture shifted from standalone stack to gentick-infra integration (shared Postgres, nginx, Cloudflare Tunnel).
