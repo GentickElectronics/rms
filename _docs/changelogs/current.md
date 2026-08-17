@@ -22,7 +22,11 @@
   under `_docs/old/` pruned (api-spec, deployment-*, gap-analysis, the old
   migration diffs/plan, the sprint-1 test baseline); the QA test register
   (`_docs/old/test-register.{md,json}`, `test-cases.xlsx`) is now tracked.
-- **Submodule pointers bumped to their `agentic` HEADs** — rms-api `2ba1159`,
+- **rms-api schema re-baselined before release** — the `000_init_tracking` +
+  `001_baseline` + `002`..`008` migration chain collapsed into a single
+  `000_baseline.sql` (generated from the release schema). The staging database
+  was rebuilt from it with all data preserved. Detail in the rms-api changelog.
+- **Submodule pointers bumped to their `agentic` HEADs** — rms-api `2938499`,
   rms-infra `cad1b71`, rms-app `c282472`, rms-frontend `6ae7d33`.
 
 ### rms-api
