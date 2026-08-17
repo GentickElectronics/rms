@@ -310,7 +310,12 @@ Both values can be reassigned at any time by an admin without code changes.
 
 **NFR-03 — Backup.** Daily automated backups of the PostgreSQL database and the file storage area. Off-site backup copy retained 30 days minimum.
 
-**NFR-04 — Security.** All traffic over HTTPS. Passwords hashed with bcrypt or equivalent (handled by Supabase Auth). Multi-factor authentication available for staff users. External users (main customer contacts and agents) must verify their email address via a 6-digit code before first sign-in (see FR-INT-14). Secrets stored in n8n's encrypted credentials store, never in code or workflow JSON.
+**NFR-04 — Security.** All traffic over HTTPS. Passwords hashed with bcrypt or equivalent, handled by the application's own auth service. External users (main customer contacts and agents) must verify their email address before first sign-in (see FR-INT-14). Secrets stored in n8n's encrypted credentials store, never in code or workflow JSON.
+
+> **Amended 2026-08-13 (DEC-8, T-59c).** Three changes from the original wording:
+> - **Multi-factor authentication is descoped.** The original required "MFA available for staff users"; TOTP/MFA is deliberately out of scope for cutover, so it is no longer a requirement (it was previously recorded as permanently unmet). Password auth over HTTPS with server-side bcrypt is the security baseline. MFA may return as a future enhancement.
+> - **Email verification is account-verification only, and is implemented.** It is a signed **verification link/token**, not a "6-digit code" as the original stated, and it is not a login second factor. It gates first sign-in and is enforced server-side (`RequireAuth`); a rate-limited resend path exists. This satisfies the external-user verification half of NFR-04.
+> - **Hashing is no longer "handled by Supabase Auth."** Supabase was removed from the stack (T-67); the Go auth service owns bcrypt hashing directly.
 
 **NFR-05 — POPIA compliance.** Lawful basis for processing recorded; consent revocable; subject access requests answerable within 30 days; data hosted in Hetzner Cape Town (SA region) — no cross-border data transfer.
 

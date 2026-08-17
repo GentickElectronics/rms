@@ -1,3 +1,20 @@
+# RMS — Migration Plan & Backlog
+
+This file holds both the **original stack migration plan** (Part 1 — the
+Next.js → Go + React plan that `audit.md` critiques) and the **current
+go-forward backlog** (Part 2). The Go-rewrite remediation (sprints 0–6) is
+complete — outcome in [`result.md`](./result.md), findings in
+[`audit.md`](./audit.md); the active scrum at a glance is
+[`../scrum.md`](../scrum.md).
+
+---
+
+# Part 1 — Original Stack Migration Plan
+
+_Recovered verbatim from the original `migration.md`. This is the Phase-4
+self-assessment `audit.md` references; its "✔ ported" claims are exactly what
+the audit corrects — read the two together._
+
 # RMS Stack Migration Plan
 
 ## Status
@@ -310,3 +327,94 @@ Notes:
 | n8n webhook format mismatch | n8n calls HTTP endpoints — unchanged. Verify payload signatures |
 | Frontend regressions | Archive rms-app, don't delete. Can roll back by switching nginx |
 | DB migration failure | Run on staging first. All migrations are additive |
+
+---
+
+# Part 2 — Current Backlog
+
+## Scrum: n8n decoupling — everything except WhatsApp into the API  ·  **COMPLETE (2026-08-17)**
+
+### Why
+n8n was chosen as the integration/automation layer between the RMS API and the
+outside world (WhatsApp, email, cron, retry). In practice it earns its keep on
+**one** thing — Meta's WhatsApp Cloud API — and freeloads on everything else,
+while adding a whole separate service that must be kept active. The test run
+proved the cost: one inactive workflow silently killed **all** outbound
+notification delivery (finding I1), and nothing alerted.
+
+Lucia has agreed n8n stays **only for WhatsApp** — which isn't built yet. So
+everything else moves into the API, and n8n is effectively parked until WhatsApp
+lands.
+
+### Architecture decision — no separate `nexus` service
+Considered a `rms-nexus` alongside the API (mirroring TalosOT's api+nexus split).
+**Rejected for now.** RMS's async work — a daily-summary cron, outbound email on
+events, webhook retry — is light: a few background goroutines and a ticker, which
+a single Go binary handles fine. A separate nexus buys independent scaling, crash
+isolation, and independent deploy — none of which RMS needs yet, and it's the
+same "extra service, extra ops" overkill we're removing from n8n. Instead the
+async work goes into a dedicated `internal/worker` package (or a `cmd/worker`
+binary in the same module, sharing the DB), designed so it *could* be lifted into
+a nexus later if volume or isolation ever demands it. Revisit only when that need
+is real.
+
+### Tickets (all done — 2026-08-17)
+
+- [x] **N-1 · Direct transactional email in the API.** Delivered as the email
+  channel of the worker (below): the dispatch loop renders per-event templates
+  and sends via the existing `internal/email` SMTP sender. Recipient is resolved
+  by DB lookup on `job_id` (payloads carry only ids). ✔ rms-api `84d8b41`
+- [x] **N-2 · In-API event dispatcher.** New `internal/worker` consumes
+  `webhook_events` (the durable log/queue is kept) and routes each event to its
+  channel(s) — email now, a `WHATSAPP_ENABLED`-gated stub later. `EmitEvent` now
+  always writes the row; the legacy synchronous n8n POST is gated behind
+  `N8N_OUTBOUND_ENABLED` (default off). Replaces workflow `01`. ✔ rms-api `84d8b41`
+- [x] **N-3 · Daily summary in-process.** Second worker loop firing 06:00 SAST
+  Mon–Fri (embedded tzdata), emitting the active-jobs / aging / workload digest.
+  Reuses a new shared `internal/report` layer (handlers delegate to it, output
+  unchanged); idempotent per SAST date via `daily_summary_runs` (migration 008,
+  claim-before-send). Replaces workflow `04`. ✔ rms-api `2ba1159`
+- [x] **N-4 · Webhook retry / dead-letter in-process.** Same loop: failed
+  deliveries retry with `min(2^attempts,60)`-minute backoff and dead-letter after
+  `WEBHOOK_MAX_ATTEMPTS` (default 6) with an escalation email to
+  `ESCALATION_EMAIL`. Migration 007 adds `next_attempt_at`/`last_attempted_at`/
+  `dead_lettered_at` + a due-scan index. Replaces workflow `05`. **Closes I1.**
+  ✔ rms-api `84d8b41`
+- [x] **N-5 · Confine n8n to WhatsApp.** n8n placed behind a `whatsapp` compose
+  profile; the outbound/retry/summary workflows are superseded by the worker;
+  `02-inbound-whatsapp` and `03-whatsapp-delivery-receipts` stay in the repo for
+  the (unbuilt) WhatsApp work. ✔ rms-infra `cad1b71`
+- [x] **N-6 · Remove n8n from the critical path.** The `whatsapp` profile means
+  `svc-start.sh` no longer brings `rms-n8n` up (verified: default compose
+  resolves to api-only; api+n8n only under `--profile whatsapp`). Revive is
+  documented in compose.yml + `.env.example` as WhatsApp-only. ✔ rms-infra `cad1b71`
+
+### Outcome & open decisions (for Teo)
+
+Delivery of outbound notifications now lives entirely in the API worker; n8n is
+parked. Full DB suite green via `agollum/testing/golang.sh` after each stage (and
+that script was verified to cleanly stop→test→restore the live saamsaam stack).
+**Not yet deployed** — this is committed on `agentic` in both submodules; it goes
+live when merged to `main` and the server pulls, and it needs the new env
+(`ESCALATION_EMAIL`, `MORNING_SUMMARY_RECIPIENTS`, etc.) filled in. Defaults the
+build chose that are cheap to change if you disagree:
+
+- **Transport is SMTP** (Mailpit in staging), not the Postmark the old workflows
+  used — per this plan's N-1 wording. Prod needs a real SMTP host/creds.
+- **quote.approved / quote.rejected now email the customer** (workflow 01 did
+  not); added since email is the primary channel. One line to downgrade to no-op.
+- **`aged_jobs` = open ≥ 7 days** (no old code to copy — first aging boundary).
+  One constant (`agedThresholdDays`).
+- **Emails are plain-text** (consistent with existing transactional mail), not
+  the HTML workflow 04 sent.
+- Open defects **F8 / F2** (and the WhatsApp-path F7 / F9) remain a separate
+  track — not part of this scrum.
+
+### Related — carry the open defects (separate track, not this scrum)
+The security/logic defects from the test run (F7, F8, F2, F9, F10) are tracked in
+[`audit.md`](./audit.md) / [`result.md`](./result.md). **F7 (WhatsApp
+auto-approve authz bypass)** and **F9 (thread-less inbound 500)** are on the
+WhatsApp path — lower urgency while WhatsApp is parked, but they must be fixed
+*with* the WhatsApp build. **F8 (credential-hash leak in quote responses)** and
+**F2 (one-primary invariant)** are live now and independent of WhatsApp — fix
+those first, each paired with a Go regression test so the suite stays green.
