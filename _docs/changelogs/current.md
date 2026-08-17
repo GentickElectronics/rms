@@ -7,6 +7,24 @@
 > the former `v0.0.0.md` archive is folded back in below. The first release
 > will be v0.0.0, cut from this file.
 
+### Changed
+- **n8n decoupling scrum (N-1..N-6) complete.** Outbound email, the
+  daily-summary cron and webhook retry/dead-letter moved out of n8n into the
+  rms-api `internal/worker` package; n8n is parked behind a `whatsapp` compose
+  profile (WhatsApp-only, not yet built). Closes finding I1 — a silently-dead
+  n8n workflow can no longer take the whole notification path down with it.
+  Per-repo detail in the rms-api and rms-infra changelogs; outcome and the
+  default choices (SMTP transport, quote-decision emails, 7-day aging boundary,
+  plain-text mail) in `_docs/migration/plan.md` Part 2.
+- **`_docs/` reorganized.** Consolidated into `_docs/migration/`
+  (`plan`, `audit`, `result`), `_docs/testing/` (procedure, manual checklist,
+  dated results) and a top-level `_docs/scrum.md` pointer. Superseded material
+  under `_docs/old/` pruned (api-spec, deployment-*, gap-analysis, the old
+  migration diffs/plan, the sprint-1 test baseline); the QA test register
+  (`_docs/old/test-register.{md,json}`, `test-cases.xlsx`) is now tracked.
+- **Submodule pointers bumped to their `agentic` HEADs** — rms-api `2ba1159`,
+  rms-infra `cad1b71`, rms-app `c282472`, rms-frontend `6ae7d33`.
+
 ### rms-api
 
 #### Added
