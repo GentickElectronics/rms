@@ -26,8 +26,12 @@
   `001_baseline` + `002`..`008` migration chain collapsed into a single
   `000_baseline.sql` (generated from the release schema). The staging database
   was rebuilt from it with all data preserved. Detail in the rms-api changelog.
-- **Submodule pointers bumped to their `agentic` HEADs** — rms-api `2938499`,
-  rms-infra `cad1b71`, rms-app `c282472`, rms-frontend `6ae7d33`.
+- **Promoted to `main` and switched to the real SMTP relay** — `agentic` merged
+  into `main` across the repos; rms-infra points SMTP at `smtp.gmail.com`
+  (credentials from `/srv/data/pragma` via `svc-build-env.sh`) instead of the
+  Mailpit staging sink.
+- **Submodule pointers bumped to their HEADs** — rms-api `2938499`,
+  rms-infra `2d31df7`, rms-app `c282472`, rms-frontend `381a8be`.
 
 ### rms-api
 
